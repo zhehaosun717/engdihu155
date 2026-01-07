@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENGL/DIHU 155 - Tutorial Orientation</title>
+    <!-- 引入像素风格字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* 配色方案：复古终端/暗色RPG风格 */
+            --bg-color: #1a1a24;
+            --screen-bg: #2d2d42;
+            --text-main: #c7c7d1;
+            --accent-green: #56e39f;
+            /* 成功/高亮 */
+            --accent-pink: #d64d4e;
+            /* 警告/重点 - 稍微调暗以降低刺眼度 */
+            --accent-yellow: #f4d35e;
+            /* 标题 */
+            --border-color: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            /* 防止文本被选中，像游戏界面一样 */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* CRT 屏幕容器效果 */
+        #game-boy-container {
+            width: 100vw;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--screen-bg);
+            border: 4px solid var(--border-color);
+            box-shadow:
+                0 0 0 4px var(--bg-color),
+                0 0 0 8px var(--border-color),
+                10px 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* 扫描线特效 */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        /* 幻灯片通用样式 */
+        .slide {
+            display: none;
+            /* 默认隐藏 */
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            animation: fadeIn 0.5s steps(5);
+            width: 100%;
+            overflow-y: auto;
+
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) transparent;
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background-color: var(--accent-green);
+            border-radius: 3px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* 第二页禁止滚动 */
+        #slide-2 {
+            overflow: hidden;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-yellow);
+            line-height: 1.4;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin-top: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p,
+        li,
+        td {
+            font-size: 1.3rem;
+            line-height: 1.3;
+        }
+
+        ul,
+        ol {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        ul li::before {
+            content: ">";
+            color: var(--accent-green);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* 像素边框盒子 */
+        .pixel-box {
+            border: 2px solid var(--text-main);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+        }
+
+        .pixel-box::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-pink);
+        }
+
+        /* 表格样式 */
+        .retro-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .retro-table th,
+        .retro-table td {
+            border: 2px solid var(--text-main);
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .retro-table th {
+            background-color: var(--accent-pink);
+            color: #fff;
+            /* 改为白色文字 */
+            text-shadow: 2px 2px 0px #000;
+            /* 增加文字描边 */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        /* 链接样式 */
+        a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-green);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        a:hover {
+            background-color: var(--accent-green);
+            color: #000;
+            border-bottom-style: solid;
+        }
+
+        /* 导航控制器 - 紧凑版 */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-top: 2px solid var(--text-main);
+            z-index: 20;
+            background: var(--screen-bg);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--bg-color);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+            font-family: 'Press Start 2P', cursive;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: transform 0.1s;
+            box-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .progress {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #000;
+            padding: 5px 10px;
+            border: 2px solid var(--text-main);
+        }
+
+        /* 特殊布局调整 */
+        .split-layout {
+            display: flex;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        .split-col {
+            flex: 1;
+        }
+
+        /* Icon styling */
+        .icon {
+            margin-right: 8px;
+            display: inline-block;
+            width: 25px;
+            text-align: center;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            #game-boy-container {
+                width: 100%;
+                height: 100%;
+                border: none;
+                padding: 0.5rem;
+            }
+
+            h1 {
+                font-size: 1.1rem;
+            }
+
+            h2 {
+                font-size: 0.9rem;
+            }
+
+            p,
+            li,
+            td {
+                font-size: 1rem;
+            }
+
+            .split-layout {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .slide {
+                padding: 0.5rem;
+            }
+
+            .controls {
+                padding: 0.5rem;
+            }
+
+            .btn {
+                padding: 6px 10px;
+                font-size: 0.6rem;
+            }
+
+            .pixel-box {
+                padding: 0.8rem;
+            }
+
+            .table-container {
+                overflow-x: auto;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-boy-container">
+        <!-- 扫描线滤镜 -->
+        <div class="scanlines"></div>
+
+        <!-- SLIDE 1: 封面 -->
+        <div class="slide active" id="slide-1" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 2.5rem; margin-top: 0; color: #fff;">ENGL / DIHU 155</h1>
+                <h2 style="color: var(--accent-yellow);">Reading, Writing, and Making<br>with Technology in the
+                    Humanities</h2>
+
+                <div class="pixel-box"
+                    style="display: inline-block; text-align: left; margin-top: 1.5rem; max-width: 800px;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Tutorial Topics:</strong> Course Orientation, Grade
+                        Contract, and They Say/ I Say</p>
+                    <p style="margin-bottom: 0.5rem;"><strong
+                            style="color: var(--accent-yellow); text-shadow: 1px 1px 0px #000;">Zhehao Sun</strong></p>
+                    <p><strong>Contact:</strong> <a href="mailto:zhehao.sun@ubc.ca">zhehao.sun@ubc.ca</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: 时间表 (修改：仅保留 Due Next Week) -->
+        <div class="slide" id="slide-2">
+            <h1 style="margin-bottom: 0.5rem;">Reminders</h1>
+            <div style="width: 100%; margin: 0.5rem 0; flex: 1; min-height: 0; position: relative; z-index: 11;">
+                <img src="pic1.png" alt="Reminder Image"
+                    style="width: 100%; max-height: 100%; object-fit: contain; border: 2px solid var(--text-main);">
+            </div>
+            <div style="width: 100%; flex-shrink: 0;">
+                <h3
+                    style="color: var(--accent-green); border-bottom: 2px solid var(--accent-green); margin-bottom: 0.5rem;">
+                    Due Next Week</h3>
+                <div class="pixel-box" style="width: 100%; font-size: 1rem; margin-top: 0.5rem; padding: 0.8rem;">
+                    <p style="margin: 0; color: var(--accent-yellow);"><strong>Next Monday Due:</strong></p>
+                    <ul style="margin-top: 3px; margin-bottom: 0.5rem;">
+                        <li><a href="https://canvas.ubc.ca/courses/179607/assignments/2377094" target="_blank">Library
+                                Orientation Module</a>/ <a
+                                href="https://canvas.ubc.ca/courses/179607/assignments/2377091" target="_blank">Library
+                                Citation Module</a></li>
+                        <li><a href="https://canvas.ubc.ca/courses/179607/assignments/2376076" target="_blank">Week 2
+                                Engagement Assignment Option 1</a>/ <a
+                                href="https://canvas.ubc.ca/courses/179607/assignments/2376077" target="_blank">Week 2
+                                Engagement Assignment Option 2</a></li>
+                    </ul>
+                    <p style="margin: 0; color: var(--accent-yellow);"><strong>Next Tuesday Due:</strong></p>
+                    <ul style="margin-top: 3px; margin-bottom: 0;">
+                        <li><a href="https://canvas.ubc.ca/courses/179607/assignments/2376071" target="_blank">Grade
+                                Contract</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3 (旧 Slide 4): 阅读材料 (链接已修复) -->
+        <div class="slide" id="slide-3">
+            <h1>Readings</h1>
+
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <h3 style="color: var(--accent-yellow); margin-top: 0;">This Week Readings:</h3>
+                <ul>
+                    <li><strong>They Say/I Say (TSIS).</strong> "They Say." (Chapters 1 to 5)</li>
+                    <li>"Playboi Farti and his AI Homework Machine." <strong>Search Engine Podcast.</strong> Feb. 14,
+                        2025. <a href="https://www.searchengine.show/playboi-farti-and-his-ai-homework-machine/"
+                            target="_blank">[Link]</a></li>
+                </ul>
+            </div>
+
+            <div class="pixel-box" style="border-color: var(--accent-pink);">
+                <h3 style="color: var(--accent-pink); margin-top: 0;">Before Next Monday Lecture Readings:</h3>
+                <ul>
+                    <li>Loyer, Jessie. <a
+                            href="https://canadianart.ca/essays/indigenous-tiktok-is-transforming-cultural-knowledge/"
+                            target="_blank">"Indigenous TikTok is Transforming Cultural Knowledge."</a>
+                        <strong>canadianart</strong> 23 April, 2020.
+                    </li>
+                    <li>Parham, Jason et al. <a
+                            href="https://www.removepaywall.com/search?url=https://www.wired.com/story/black-twitter-oral-history-part-i-coming-together/"
+                            target="_blank">"A People's History of Black Twitter, Part 1."</a> <strong>Wired</strong> 15
+                        July 2021.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 4 (旧 Slide 5): 破冰活动 -->
+        <div class="slide" id="slide-4">
+            <h1>Introductions</h1>
+            <h2 style="color: #fff; margin-bottom: 1rem;">Write & Draw</h2>
+
+            <div style="display: flex; justify-content: flex-start; width: 100%;">
+                <div class="pixel-box" style="width: 100%; background: #fff; color: #000; padding: 1.5rem;">
+                    <ul style="border-left: 4px solid #000; padding-left: 1rem; margin: 0;">
+                        <li style="margin-bottom: 1rem;">Name and preferred pronouns</li>
+                        <li style="margin-bottom: 1rem;">Year and major</li>
+                        <li>One drawing that represents something you like or are passionate about.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 5 (旧 Slide 6): 讨论 -->
+        <div class="slide" id="slide-5">
+            <h1>Discussions</h1>
+
+            <div class="split-layout" style="align-items: flex-start; flex: 1; padding-top: 1rem;">
+                <div class="split-col" style="flex: 1.2;">
+                    <p>Read the article: "How far can James Cameron's Avatar saga go after its billion-dollar box office
+                        triumph?" <strong>The Guardian, January 5, 2026.</strong></p>
+                    <hr style="border: 1px dashed var(--text-main); margin: 1rem 0;">
+                    <ul>
+                        <li>Generate a <strong>They Say</strong> statement from the article</li>
+                        <li>Generate an <strong>I say</strong> response: one that either agrees, disagrees, or where you
+                            agree and disagree simultaneously.</li>
+                    </ul>
+                </div>
+                <div class="split-col"
+                    style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                    <!-- QR Code -->
+                    <div style="background: #fff; padding: 0.5rem; border: 4px solid var(--accent-green);">
+                        <img src="QRcode1.png" alt="QR Code" style="width: 180px; height: 180px; display: block;">
+                    </div>
+                    <p
+                        style="font-family: 'Press Start 2P'; font-size: 0.7rem; margin-top: 0.5rem; color: var(--accent-green);">
+                        Google Doc Link</p>
+                    <a href="https://docs.google.com/document/d/18Hbqk1w2AQeSD5ga9oqxOjsdGGbYzv7esC5TrWjHcX0/edit?usp=sharing"
+                        target="_blank" style="font-size: 0.9rem; margin-top: 5px;">[CLICK TO OPEN]</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6 (旧 Slide 7): 评分合约 (修改：增加表头清晰度) -->
+        <div class="slide" id="slide-6">
+            <h1>Contract Grading Q&A</h1>
+            <p style="font-size: 1rem; color: var(--accent-yellow);">Grade Contract Student Workload</p>
+
+            <div class="table-container" style="width: 100%;">
+                <table class="retro-table">
+                    <thead>
+                        <tr>
+                            <th style="color: #dfd9c0;">C</th>
+                            <th style="color: #dfd9c0;">B</th>
+                            <th style="color: #dfd9c0;">A</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="color: var(--accent-yellow);">3150</span> words</td>
+                            <td><span style="color: var(--accent-yellow);">4150</span> words</td>
+                            <td><span style="color: var(--accent-yellow);">6200</span> words</td>
+                        </tr>
+                        <tr>
+                            <td>Miss no more than <span style="color: var(--accent-yellow);">5</span> classes or
+                                tutorials</td>
+                            <td>Miss no more than <span style="color: var(--accent-yellow);">3</span> classes or
+                                tutorials</td>
+                            <td>Miss no more than <span style="color: var(--accent-yellow);">1</span> class or tutorial
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Essay 1 (A or B)<br>Revision Plan Presentation</td>
+                            <td>Essay 1 (A or B)<br>Essay 2<br>Revision Plan Presentation</td>
+                            <td>Essay 1 (A&B)<br>Essay 2<br>Revision Plan Presentation</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-yellow);">5</span> engagement assignments</td>
+                            <td><span style="color: var(--accent-yellow);">5</span> engagement assignments</td>
+                            <td><span style="color: var(--accent-yellow);">12</span> engagement assignments</td>
+                        </tr>
+                        <tr>
+                            <td>Final Exam (1200 words)</td>
+                            <td>Final Exam (1200 words)</td>
+                            <td>Final Exam (1200 words)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SLIDE 7 (旧 Slide 8): 结尾 -->
+        <div class="slide" id="slide-7" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 3.5rem; color: var(--accent-green); text-shadow: 4px 4px 0 #000;">
+                    THANK YOU!</h1>
+            </div>
+        </div>
+
+        <!-- 底部控制栏 -->
+        <div class="controls">
+            <button class="btn" onclick="prevSlide()" id="btn-prev"><i class="fas fa-caret-left"></i> PREV</button>
+            <div class="progress" id="slide-counter">1 / 7</div>
+            <button class="btn" onclick="nextSlide()" id="btn-next">NEXT <i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        /* 简单的幻灯片逻辑 */
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const counter = document.getElementById('slide-counter');
+
+        // 更新显示
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+
+            // 按钮状态更新
+            document.getElementById('btn-prev').style.opacity = currentSlide === 0 ? '0.5' : '1';
+            document.getElementById('btn-next').style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        // 下一张
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        // 上一张
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        // 回到开始
+        function goToStart() {
+            currentSlide = 0;
+            updateSlide();
+        }
+
+        // 键盘监听
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // 点击屏幕左右侧翻页（排除交互元素）
+        document.getElementById('game-boy-container').addEventListener('click', (e) => {
+            // 防止点击按钮或链接时触发
+            if (e.target.closest('button') || e.target.closest('a')) return;
+
+            const width = window.innerWidth;
+            // 只有在非选中文字状态下才翻页
+            if (window.getSelection().toString().length === 0) {
+                if (e.clientX > width * 0.7) {
+                    nextSlide();
+                } else if (e.clientX < width * 0.3) {
+                    prevSlide();
+                }
+            }
+        });
+
+        // 初始化
+        updateSlide();
+    </script>
+</body>
+
+</html>
