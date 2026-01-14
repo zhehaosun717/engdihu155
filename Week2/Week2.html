@@ -14,7 +14,7 @@
 
     <style>
         :root {
-            /* 配色方案：复古终�?暗色RPG风格 */
+            /* 配色方案：复古终�?暗色RPG风格 */
             --bg-color: #1a1a24;
             --screen-bg: #2d2d42;
             --text-main: #c7c7d1;
@@ -65,7 +65,7 @@
             overflow: hidden;
         }
 
-        /* 扫描线特�?*/
+        /* 扫描线特�?*/
         .scanlines {
             position: absolute;
             top: 0;
@@ -280,7 +280,7 @@
             color: var(--accent-blue);
         }
 
-        /* 导航控制�?- 紧凑�?*/
+        /* 导航控制�?- 紧凑�?*/
         .controls {
             display: flex;
             justify-content: space-between;
@@ -320,7 +320,7 @@
             border: 2px solid var(--text-main);
         }
 
-        /* 响应式调�?*/
+        /* 响应式调�?*/
         @media (max-width: 768px) {
             #game-boy-container {
                 width: 100%;
@@ -449,7 +449,7 @@
                 <h2 style="margin:0;"><a
                         href="https://docs.google.com/document/d/1ivRm3RtELvlMPR0EycmPy_Bzi0Rd1ZilCOF9LtZafDQ/edit?tab=t.0"
                         target="_blank" style="color: var(--accent-green);">Sign Up Sheet</a></h2>
-                <p class="highlight">Fridays 10:00 �?12:00 (Zoom Meeting)</p>
+                <p class="highlight">Fridays 10:00 -12:00 (Zoom Meeting)</p>
             </div>
 
             <!-- Office Hours Screenshot -->
@@ -832,38 +832,53 @@
         </div>
 
         <!-- SLIDE 24: AI Policy -->
-        <div class="slide" id="slide-24" style="overflow-y: auto;">
+        <div class="slide" id="slide-24">
             <h1>AI Policy</h1>
 
-            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
-                <div style="flex-shrink: 0;">
+            <div style="display: flex; gap: 1.5rem; align-items: stretch;">
+                <div style="flex-shrink: 0; display: flex; align-items: center;">
                     <img src="AiPolicy.png" alt="AI Policy"
-                        style="max-width: 250px; border: 2px solid var(--text-main);">
+                        style="max-width: 280px; border: 2px solid var(--text-main);">
                 </div>
-                <div style="flex: 1;">
-                    <div class="pixel-box" style="border-color: var(--accent-yellow);">
-                        <h3 style="color: var(--accent-yellow); margin: 0 0 0.5rem 0;">Standard Faculty Policy</h3>
-                        <p style="font-size: 1.1rem; margin: 0;">Use of generative AI for coursework is <strong class="warning">NOT allowed</strong> unless indicated otherwise. This is considered academic misconduct.</p>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="pixel-box" style="border-color: var(--accent-yellow); flex: 1;">
+                        <h3 style="color: var(--accent-yellow); margin: 0 0 0.3rem 0;">Standard Faculty Policy</h3>
+                        <p style="font-size: 1.2rem; margin: 0;">Use of generative AI for coursework is <strong
+                                class="warning">NOT allowed</strong> unless indicated otherwise.</p>
+                    </div>
+                    <div class="pixel-box" style="border-color: var(--accent-pink); flex: 1;">
+                        <h3 style="color: var(--accent-pink); margin: 0 0 0.3rem 0;">Course Policy</h3>
+                        <p style="font-size: 1.1rem; margin: 0;">The aims of this course are to learn how to observe
+                            evidence and write in a university context; it is a skills-based course where you apply
+                            practical knowledge to readings. While I am not against the use of AI in general, its use
+                            contravenes these course goals. So, <span
+                                style="color: #FFA500; font-weight: bold;">“Orange”</span> use of AI is permitted, but
+                            you’ll find very limited opportunity to “study” in this skills-based course. AI is <strong
+                                class="warning">NOT permitted</strong> for spellchecking translation, citation
+                            generation, or other writing-based tasks for which you are acquiring skills in this course.
+                            Grammarly, Google Translate, and a range of other tools have integrated AI, so you must turn
+                            them off for this class. You can use old-fashioned spell checkers and translation
+                            dictionaries in your assignments. In any class, if you’re unsure whether AI use is
+                            permitted, check the Learning Outcomes and ask yourself whether using AI would get in the
+                            way of your learning.</p>
+                    </div>
+                    <div class="pixel-box" style="flex: 1;">
+                        <h3 style="margin: 0 0 0.3rem 0;">What if I Use AI in this class?</h3>
+                        <p style="font-size: 1.1rem; margin: 0;">Most assignments for this course are in-class and you
+                            are allowed to have access to a range of print-based tools. If you use AI on your take-home
+                            assignments, I will refer you to the Academic Integrity Matters office. Their job is to help
+                            you to learn what counts as proper AI usage in your courses. They will assess if any modules
+                            or additional support is needed. You will be required to complete what they recommend in
+                            order to pass this class. If your use of AI is simply a mistake, that might be all you are
+                            required to do. If there is a clear, systemic academic integrity violation of any kind,
+                            including AI, in a single assignment you will receive a <span
+                                style="color: var(--accent-yellow);">1/3 letter grade reduction</span> at the end of the
+                            course. If there is a clear, systemic academic integrity violation across more than one
+                            assignment you will <span style="color: var(--accent-pink);">fail the course</span>.</p>
                     </div>
                 </div>
             </div>
-
-            <div class="pixel-box" style="border-color: var(--accent-pink); margin-top: 1rem;">
-                <h3 style="color: var(--accent-pink); margin: 0 0 0.5rem 0;">Course Policy</h3>
-                <p style="font-size: 1.1rem; margin: 0;">The aims of this course are to learn how to observe evidence and write in a university context; it is a skills-based course. <span style="color: #FFA500; font-weight: bold;">"Orange"</span> use of AI is permitted, but you'll find very limited opportunity. AI is <strong class="warning">NOT permitted</strong> for spellchecking, translation, citation generation, or other writing-based tasks. Grammarly, Google Translate, and other tools have integrated AI, so you must <strong>turn them off</strong> for this class. You can use old-fashioned spell checkers and translation dictionaries.</p>
-            </div>
-
-            <div class="pixel-box" style="margin-top: 1rem;">
-                <h3 style="margin: 0 0 0.5rem 0;">What if I Use AI in this class?</h3>
-                <p style="font-size: 1.1rem; margin: 0 0 0.5rem 0;">If you use AI on take-home assignments, I will refer you to the Academic Integrity Matters office. They will assess if any modules or additional support is needed.</p>
-                <ul style="font-size: 1.1rem; margin: 0;">
-                    <li>If your use is simply a mistake, completing their modules may be all that's required.</li>
-                    <li>Single systemic violation: <span style="color: var(--accent-yellow);">1/3 letter grade reduction</span></li>
-                    <li>Violations across multiple assignments: <span style="color: var(--accent-pink);">Fail the course</span></li>
-                </ul>
-            </div>
         </div>
-
 
         <!-- SLIDE 25: End -->
         <div class="slide" id="slide-25" style="justify-content: center; align-items: center;">
@@ -944,4 +959,3 @@
 </body>
 
 </html>
-
