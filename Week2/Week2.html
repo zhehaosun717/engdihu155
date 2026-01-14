@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENGL/DIHU 155 - Week 2 Tutorial</title>
+    <!-- 引入像素风格字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* 配色方案：复古终端/暗色RPG风格 */
+            --bg-color: #1a1a24;
+            --screen-bg: #2d2d42;
+            --text-main: #c7c7d1;
+            --accent-green: #56e39f;
+            /* 成功/高亮 */
+            --accent-pink: #d64d4e;
+            /* 警告/重点 */
+            --accent-yellow: #f4d35e;
+            /* 标题 */
+            --accent-blue: #5d93e1;
+            /* 链接/信息 */
+            --border-color: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* CRT 屏幕容器效果 */
+        #game-boy-container {
+            width: 100vw;
+            max-width: 1920px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--screen-bg);
+            border: 4px solid var(--border-color);
+            box-shadow:
+                0 0 0 4px var(--bg-color),
+                0 0 0 8px var(--border-color),
+                10px 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* 扫描线特效 */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        /* 幻灯片通用样式 */
+        .slide {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            animation: fadeIn 0.5s steps(5);
+            width: 100%;
+            overflow-y: auto;
+
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) transparent;
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background-color: var(--accent-green);
+            border-radius: 3px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                text-shadow: 4px 4px 0 #000, 0 0 10px rgba(86, 227, 159, 0.3);
+            }
+
+            50% {
+                text-shadow: 4px 4px 0 #000, 0 0 20px rgba(86, 227, 159, 0.6);
+            }
+        }
+
+        .glow-text {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-yellow);
+            line-height: 1.4;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--accent-green);
+            margin-bottom: 0.8rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        p,
+        li,
+        td {
+            font-size: 1.6rem;
+            line-height: 1.4;
+        }
+
+        ul,
+        ol {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        ul li::before {
+            content: ">";
+            color: var(--accent-green);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* 链接样式 */
+        a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-green);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        a:hover {
+            background-color: var(--accent-green);
+            color: #000;
+            border-bottom-style: solid;
+        }
+
+        @keyframes link-blink {
+
+            0%,
+            100% {
+                border-bottom-color: var(--accent-green);
+            }
+
+            50% {
+                border-bottom-color: transparent;
+            }
+        }
+
+        a {
+            animation: link-blink 1.5s ease-in-out infinite;
+        }
+
+        a:hover {
+            animation: none;
+        }
+
+        /* 像素边框盒子 */
+        .pixel-box {
+            border: 2px solid var(--text-main);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+        }
+
+        .pixel-box::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-pink);
+        }
+
+        /* 强调文本 */
+        .highlight {
+            color: var(--accent-green);
+        }
+
+        .warning {
+            color: var(--accent-pink);
+        }
+
+        .info {
+            color: var(--accent-blue);
+        }
+
+        /* 导航控制器 - 紧凑版 */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-top: 2px solid var(--text-main);
+            z-index: 20;
+            background: var(--screen-bg);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--bg-color);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+            font-family: 'Press Start 2P', cursive;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: transform 0.1s;
+            box-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .progress {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #000;
+            padding: 5px 10px;
+            border: 2px solid var(--text-main);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            #game-boy-container {
+                width: 100%;
+                height: 100%;
+                border: none;
+                padding: 0.5rem;
+            }
+
+            h1 {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 0.8rem;
+            }
+
+            p,
+            li,
+            td {
+                font-size: 1rem;
+            }
+
+            .slide {
+                padding: 0.5rem;
+            }
+
+            .pixel-box {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-boy-container">
+        <div class="scanlines"></div>
+
+        <!-- SLIDE 1: Title -->
+        <div class="slide active" id="slide-1" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <p
+                    style="font-family: 'Press Start 2P'; font-size: 0.8rem; color: var(--accent-pink); margin-bottom: 1rem;">
+                    WEEK 2 TUTORIAL</p>
+                <h1 class="glow-text" style="font-size: 2.5rem; margin-top: 0; color: #fff;">ENGL / DIHU 155</h1>
+                <h2 style="color: var(--accent-yellow);">Reading, Writing, and Making<br>with Technology in the
+                    Humanities</h2>
+
+                <div class="pixel-box"
+                    style="display: inline-block; text-align: left; margin-top: 1.5rem; max-width: 800px;">
+                    <p style="margin-bottom: 0.5rem;"><strong
+                            style="color: var(--accent-yellow); text-shadow: 1px 1px 0px #000;">Zhehao Sun</strong></p>
+                    <p><strong>Contact:</strong> <a href="mailto:zhehao.sun@ubc.ca">zhehao.sun@ubc.ca</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Reminder -->
+        <div class="slide" id="slide-2">
+            <h1><i class="fas fa-bell"></i> REMINDER</h1>
+            <div class="pixel-box">
+                <h3 class="highlight">Due Next Monday:</h3>
+                <ul>
+                    <li><a href="https://canvas.ubc.ca/courses/179607/assignments/2381453" target="_blank">Week 3
+                            Engagement Assignment</a></li>
+                </ul>
+                <hr style="border: 1px dashed var(--text-main); margin: 1rem 0;">
+                <h3 class="warning">Notice:</h3>
+                <ul>
+                    <li class="warning">No Tutorial/ Discussion Session Next Week</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: In-Class Essay Readings -->
+        <div class="slide" id="slide-3">
+            <h1><i class="fas fa-book"></i> For Next Monday In-Class Essay</h1>
+
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <h3 style="margin-top:0;">Readings</h3>
+                <ul>
+                    <li><strong>Nicholson Reading:</strong> Baker, Nicholson. <a
+                            href="https://www.nybooks.com/articles/2008/03/20/the-charms-of-wikipedia/"
+                            target="_blank">"The Charms of Wikipedia."</a> <em>The New
+                            York review of books</em>, Volume 55, 03/2008. (Find on UBCO Library catalogue)</li>
+                    <li><strong>Snow Reading:</strong> Snow, C.P. "The Rede Lecture." <em>The Two Cultures.</em> 1959.
+                        <a href="https://canvas.ubc.ca/courses/179607/files/43797081?wrap=1"
+                            target="_blank">Download</a>
+                    </li>
+                </ul>
+                <p style="font-size: 1rem; color: var(--accent-blue); margin-top: 1rem;">*In library catalogue, you can
+                    also find the Snow essay at call number AZ361</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Week 4 Readings -->
+        <div class="slide" id="slide-4">
+            <h1><i class="fas fa-calendar-alt"></i> Readings for Week 4 (Jan 26th)</h1>
+
+            <div class="pixel-box">
+                <ul>
+                    <li><strong>McLuhan, Marshall.</strong> Selections from "The Medium is the Message." From
+                        <em>Understanding Media: The Extensions of Man.</em> <a
+                            href="https://canvas.ubc.ca/courses/179607/files/43796971?wrap=1" target="_blank">On
+                            Canvas</a>.<br>
+                        <span class="highlight">> Read pg 1-10 + pg 15.</span>
+                    </li>
+
+                    <li><strong>Marx, Leo.</strong> Selections from "'Technology': The Emergence of a Hazardous
+                        Concept." <em>Social Research.</em> Vol. 64, no. 3. (available through UBCO Library)<br>
+                        <span class="highlight">> Read pg. 965-980</span>
+                    </li>
+
+                    <li><strong>Acheson, Katherine O.</strong> Writing Essays About Literature (<a
+                            href="https://canvas.ubc.ca/courses/179607/files/43797071?wrap=1" target="_blank">chapter 7
+                            & 8 available on canvas</a>)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Office Hours / Canvas -->
+        <div class="slide" id="slide-5">
+            <h1><i class="fas fa-desktop"></i> Office Hours</h1>
+
+            <div class="pixel-box" style="margin-bottom: 2rem;">
+                <h2 style="margin:0;"><a
+                        href="https://docs.google.com/document/d/1ivRm3RtELvlMPR0EycmPy_Bzi0Rd1ZilCOF9LtZafDQ/edit?tab=t.0"
+                        target="_blank" style="color: var(--accent-green);">Sign Up Sheet</a></h2>
+                <p class="highlight">Fridays 10:00 – 12:00 (Zoom Meeting)</p>
+            </div>
+
+            <!-- Office Hours Screenshot -->
+            <div style="width: 100%; text-align: center;">
+                <img src="officeHours.png" alt="Office Hours Canvas Screenshot"
+                    style="max-width: 50%; border: 2px solid var(--text-main);">
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Writing Prompts -->
+        <div class="slide" id="slide-6">
+            <h1><i class="fas fa-pencil-alt"></i> Writing Prompts</h1>
+            <h2 style="color: #fff;">Playboi Farti</h2>
+
+            <div class="pixel-box">
+                <ul>
+                    <li>What views about AI were expressed in this podcast, and by whom?</li>
+                    <li>Who do you agree with, and why?</li>
+                    <li>Who do you disagree with, and why?</li>
+                    <li>How do the themes in this podcast relate to something you have either personally experienced, or
+                        learned about in another course?</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Assignment Description -->
+        <div class="slide" id="slide-7">
+            <h1><i class="fas fa-file-alt"></i> <a href="https://canvas.ubc.ca/courses/179607/files/43851181?wrap=1"
+                    target="_blank" style="color: var(--accent-yellow);">Essay 1 Description</a></h1>
+            <p class="info" style="font-size: 1rem;">You have unlimited time to complete this assignment.</p>
+
+            <div class="pixel-box">
+                <h3>Grade Contracts</h3>
+                <ul>
+                    <li><strong>A-Grade Contracts:</strong> A-grade contracts agree to complete <span
+                            style="color: var(--accent-yellow);">2</span> full essays, both A
+                        and B, <span style="color: var(--accent-yellow);">1</span> on each reading provided. You will
+                        therefore do <span style="color: var(--accent-yellow);">1</span> assignment on the Baker essay
+                        and
+                        another on the Snow essay.</li>
+                    <li><strong>B- and C-Grade Contracts:</strong> You agree to complete <span
+                            style="color: var(--accent-yellow);">1</span> full essay, either A or B.
+                        You will choose between the Baker and Snow essays. Ensure you complete all identifying
+                        information at the top of the exam booklet.</li>
+                </ul>
+            </div>
+
+            <div class="pixel-box">
+                <h3>Permitted resources:</h3>
+                <ul>
+                    <li>Up to <span style="color: var(--accent-yellow);">2</span> print dictionaries, including
+                        translation, phonetic, and other dictionaries.</li>
+                    <li><span style="color: var(--accent-yellow);">1</span> single sided, hand written Evidence Chart
+                        with summary sentences.</li>
+                    <li>Computer with a Respondus lockdown browser.</li>
+                    <li>Print resources provided by the professor, including proof reading checklists and printed out
+                        primary texts (where appropriate).</li>
+                </ul>
+            </div>
+
+            <div class="pixel-box">
+                <h3>Requirements (All Contracts)</h3>
+                <p>Each essay should include:</p>
+                <ul>
+                    <li>An introduction with a strong, argumentative thesis, clear roadmap, and "so what" statement.
+                    </li>
+                    <li>All of your paragraphs will need to use:
+                        <ul>
+                            <li style="margin-left: 1rem; list-style: circle;">The paragraph structure we have learned
+                                in class;</li>
+                            <li style="margin-left: 1rem; list-style: circle;">The lessons and templates from TS/IS</li>
+                        </ul>
+                    </li>
+                    <li><strong>A Works Cited:</strong> Use what you have learned in the Library Citation Module to
+                        include a Works Cited in MLA citation style.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Thesis Statement -->
+        <div class="slide" id="slide-8">
+            <h1>Thesis Statement & Intro</h1>
+
+            <div class="pixel-box" style="border: 4px double var(--accent-green); padding: 2rem;">
+                <p>You will put together an <span class="highlight">original, argumentative thesis statement</span> that
+                    emerges from the evidence that you engage with in the body paragraphs.</p>
+                <br>
+                <p>Your <strong>roadmap</strong> should match the big takeaways of each paragraph in your essay.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: Part 1 -->
+        <div class="slide" id="slide-9">
+            <h1>Part 1: They Say</h1>
+            <p>Write <span style="color: var(--accent-yellow);">1</span> "They Say" paragraph of ~<span
+                    style="color: var(--accent-yellow);">250</span> words. All of your evidence in your paragraph should
+                come directly
+                from the essays.</p>
+
+            <div class="pixel-box">
+                <h3>Baker</h3>
+                <p>Summarize the debate between "inclusionist" and "deletionist" Wikipedia editors. You should talk
+                    about their practical disagreements but also try to bring out differences in their ideas about
+                    larger questions such as what encyclopedias are for, what kinds of information are valuable, and
+                    what the Internet ought to be like.</p>
+            </div>
+
+            <div class="pixel-box">
+                <h3>Snow</h3>
+                <p>Summarize what Snow says about the relationship between the Industrial Revolution and the division of
+                    the Two Cultures.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: Part 2 -->
+        <div class="slide" id="slide-10">
+            <h1>Part 2: I Say</h1>
+            <p>Draw on Chapter 4 of They Say/I Say to write an "I Say" paragraph of ~<span
+                    style="color: var(--accent-yellow);">250</span> words.</p>
+
+            <div class="pixel-box">
+                <p>You should take a position in relation to the summary that you provided in Part 1. Perhaps you agree
+                    with one or other side of a debate, maybe you're somewhere in the middle, or maybe you take issue
+                    with the underlying assumptions of what "they" say.</p>
+                <p class="highlight">Aim to say something contentious and specific.</p>
+                <p style="font-size: 1rem; color: #888;">(Remember: contentiousness means saying things someone might
+                    reasonably disagree with, not making people mad.)</p>
+            </div>
+
+            <p style="font-size: 1rem; margin-top: 1rem;">*This paragraph is the most closely related to your thesis
+                statement for the essay as a whole. As the authors of They Say/I Say indicate, even agreement in
+                academic writing must be agreement with a difference. If you're somewhere in the middle, a statement
+                like "both sides have valid points" is too wishy-washy! Take a specific position.</p>
+        </div>
+
+        <!-- SLIDE 11: Part 3 -->
+        <div class="slide" id="slide-11">
+            <h1>Part 3: Expansion</h1>
+            <p>Write a third paragraph of ~250 words that expands your thinking to a question or idea that is related
+                but not directly obvious.</p>
+
+            <div class="pixel-box">
+                <p>This paragraph will be most closely related to the "So What" statement in your introduction. You
+                    could, for example, talk about attention, the transformation of old genres in digital culture, the
+                    ways cultures privilege one or another form of information, the relationship between information and
+                    power, misinformation and authority, "neutrality" as a rhetorical strategy, the place of human
+                    intelligence in digital culture that is increasingly algorithmic, or the potential for new
+                    technology to counteract systemic inequities (ableism, racism, sexism, etc.) or reinforce them.</p>
+            </div>
+
+            <p style="font-size: 1rem; color: var(--accent-yellow);">These are simply ideas, not prompts—it's up to you
+                to develop a suitable idea in this paragraph that supports your thesis!</p>
+            <p style="font-size: 1rem;">Signal clearly the way that your expansion is related to the ideas in Part 1 and
+                Part 2: how did you get here? What is the bridge? Your own thinking should be front and center.</p>
+        </div>
+
+        <!-- SLIDE 12: Thesis Structure -->
+        <div class="slide" id="slide-12">
+            <h1>Thesis Formula</h1>
+
+            <div class="pixel-box" style="text-align: center; padding: 2rem;">
+                <h2 style="color: var(--accent-green); font-size: 1.5rem;">I am arguing [X]</h2>
+                <p><em>(What do you say in your thesis?)</em></p>
+
+                <h2 style="color: var(--accent-pink); margin: 1rem 0;">BECAUSE / BASED ON</h2>
+
+                <h2 style="color: var(--accent-yellow); font-size: 1.5rem;">Reasoning [Y]</h2>
+            </div>
+
+            <div class="pixel-box" style="font-size: 1rem;">
+                <p><strong>Example:</strong> "Sole and Despotic Dominion" cannot be considered a short story because,
+                    even though it has a conflict, it lacks other narrative elements like exposition, rising action,
+                    climax, etc.</p>
+                <hr style="border: 1px dashed var(--text-main); margin: 0.5rem 0;">
+                <p class="highlight">A reader should be able to predict what you will be discussing in your essay just
+                    by reading the thesis statement.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 13: Analytic Writing Structure -->
+        <div class="slide" id="slide-13">
+            <h1>Paragraph Structure</h1>
+            <p>For Analytic Writing Assignment</p>
+
+            <div class="pixel-box">
+                <ol>
+                    <li style="margin-bottom: 1.5rem;"><strong><span style="color: var(--accent-yellow);">1</span>
+                            strong and accurate topic sentence/claim</strong> for
+                        your paragraph.</li>
+                    <li style="margin-bottom: 1.5rem;"><strong><span style="color: var(--accent-yellow);">4-5</span>
+                            well-written, observant sentences.</strong> Within
+                        those <span style="color: var(--accent-yellow);">4-5</span> sentences, you should include:
+                        <ul>
+                            <li style="margin-left: 1rem; list-style: circle;">At least <span
+                                    style="color: var(--accent-yellow);">1</span> well-chosen, framed, and
+                                grammatically integrated quotation.</li>
+                            <li style="margin-left: 1rem; list-style: circle;">Discussion or explanation of that
+                                quotation that is at least as long as the quotation.</li>
+                        </ul>
+                    </li>
+                    <li><strong><span style="color: var(--accent-yellow);">1</span> final sentence</strong> that expands
+                        on the summary or indicates its implications.
+                    </li>
+                </ol>
+                <p style="font-size: 0.9rem; color: var(--accent-pink);">*This is not the same thing a "connector"
+                    sentence that you may have learned in high school.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 14: What is a paragraph -->
+        <div class="slide" id="slide-14">
+            <h1>What is a paragraph?</h1>
+
+            <div class="pixel-box">
+                <ul>
+                    <li><strong><span style="color: var(--accent-yellow);">200-300</span> words</strong> (think: no more
+                        than <span style="color: var(--accent-yellow);">2/3</span> of a typed page)</li>
+                    <li>A logical unit that presents a well-defined idea with evidence and analysis</li>
+                    <li>Stand-alone or as part of a progression of ideas</li>
+                </ul>
+            </div>
+
+            <p>In an essay or any other extended piece of writing, a paragraph is at once self-contained and in
+                relationship to the paragraphs around it.</p>
+            <p>A relationship might be opposition, continuation, expansion...</p>
+        </div>
+
+        <!-- SLIDE 15: Structure Overview -->
+        <div class="slide" id="slide-15">
+            <h1>Paragraph Structure</h1>
+            <p>In academic writing (especially as you're learning to write), paragraphs have a rigid and predictable
+                structure:</p>
+
+            <div class="pixel-box" style="text-align: center;">
+                <h2 style="color: var(--accent-yellow);">TOPIC SENTENCE</h2>
+                <i class="fas fa-arrow-down" style="color: #fff; margin: 0.5rem 0;"></i>
+                <h2 style="color: var(--accent-green);">EVIDENCE-ANALYSIS PAIRS</h2>
+                <p style="font-size: 0.8rem;">(Here is where you use your quoting skills from They Say/I Say)</p>
+                <i class="fas fa-arrow-down" style="color: #fff; margin: 0.5rem 0;"></i>
+                <h2 style="color: var(--accent-pink);">SO-WHAT SENTENCE</h2>
+            </div>
+        </div>
+
+        <!-- SLIDE 16: Topic Sentence -->
+        <div class="slide" id="slide-16">
+            <h1>Topic Sentence</h1>
+
+            <div class="pixel-box">
+                <p>A brief statement that describes, in specific terms, the claim that will be demonstrated in the
+                    paragraph.</p>
+                <ul>
+                    <li><strong>Stand-alone:</strong> The primary idea, often like a mini-argument.</li>
+                    <li><strong>In an essay or larger piece of writing:</strong> A sub-claim to the main argument or
+                        thesis.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 17: Topic vs Claim -->
+        <div class="slide" id="slide-17">
+            <h1>Topic Sentence vs. Claim</h1>
+
+            <div class="pixel-box">
+                <p>"Topic sentence" may sounds a misleading term. You may call it a "claim."</p>
+                <p class="highlight">A topic sentence/claim needs to take a position.</p>
+                <ul>
+                    <li>Even in summary writing, all writing has a position or goal.</li>
+                    <li>Topic sentences/claims do not simply say that a paragraph has a subject, but signals what you
+                        want to say about that subject.</li>
+                </ul>
+                <h2 style="text-align: center; margin-top: 1rem;">WHAT/HOW not THAT</h2>
+            </div>
+        </div>
+
+        <!-- SLIDE 18: Evidence & Analysis -->
+        <div class="slide" id="slide-18">
+            <h1>Evidence & Analysis</h1>
+            <p class="highlight" style="text-align: center;">*Evidence and Analysis always go together.*</p>
+
+            <div class="pixel-box">
+                <h3 style="color: var(--accent-blue);">Evidence:</h3>
+                <p>Aspects of text (especially literary expression) that support the topic sentence.</p>
+                <p>What elements of the text demonstrate your argument? Literary expression? Textual structure? Metre?
+                    Sonic qualities?</p>
+            </div>
+
+            <div class="pixel-box">
+                <h3 style="color: var(--accent-green);">Analysis:</h3>
+                <p>Draw the important elements of literary expression out and explain what effect they have.</p>
+                <p>This is the most important part of your paragraph. This is where you prove your argument.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 19: Evidence Rules -->
+        <div class="slide" id="slide-19">
+            <h1>Evidence Rules</h1>
+            <p>*There can be more than one evidence-analysis pair in your paragraph. Here are the rules:</p>
+
+            <div class="pixel-box">
+                <ul>
+                    <li>Each piece of evidence must be well framed and grammatically integrated.</li>
+                    <li>There should be a logical relationship between each of your evidence-analysis pairs. Do they
+                        build on one another? Do they provide opposition and nuance?</li>
+                    <li>The amount of evidence you provide must suit the scope of your claim/topic sentence.</li>
+                    <li>All pieces of evidence must be necessary to your claim/topic sentence.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 20: So What -->
+        <div class="slide" id="slide-20">
+            <h1>"So What" Sentence</h1>
+
+            <div class="pixel-box">
+                <p>Your paragraph needs a closing statement that indicates the significance of your topic, evidence, and
+                    analysis. This statement is a bookend to the topic sentence/claim; it is a closing frame of
+                    paragraph.</p>
+                <ul>
+                    <li>In a stand-alone paragraph, this sentence indicates the importance simply of the paragraph
+                        itself.</li>
+                    <li>In an essay this statement refers back to your thesis statement/argument.</li>
+                </ul>
+                <p class="warning" style="margin-top: 1rem;">*Note: This statement does not expand outwards or refer to
+                    the next paragraph.*</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 21: Integrating Evidence -->
+        <div class="slide" id="slide-21">
+            <h1>Integrating Evidence</h1>
+            <p>Any use of evidence requires three elements (you should know this from They Say/I Say):</p>
+
+            <div class="pixel-box" style="text-align: center;">
+                <h2 style="margin: 1rem 0;">Framing</h2>
+                <i class="fas fa-plus" style="color: #fff;"></i>
+                <h2 style="margin: 1rem 0;">Grammatical integration</h2>
+                <i class="fas fa-plus" style="color: #fff;"></i>
+                <h2 style="margin: 1rem 0;">Analysis</h2>
+            </div>
+        </div>
+
+        <!-- SLIDE 22: Quotation Sandwich -->
+        <div class="slide" id="slide-22">
+            <h1>Quotation Sandwich</h1>
+
+            <div style="display: flex; gap: 1rem; align-items: stretch;">
+                <div class="pixel-box"
+                    style="flex: 1; background: var(--accent-yellow); color: #000; text-align: center;">
+                    <strong>1. INTRODUCTION</strong><br>
+                    Introduce the idea
+                </div>
+                <div class="pixel-box"
+                    style="flex: 1; background: var(--accent-pink); color: #fff; text-align: center;">
+                    <strong>2. QUOTATION</strong><br>
+                    Quote the source
+                </div>
+                <div class="pixel-box"
+                    style="flex: 1; background: var(--accent-yellow); color: #000; text-align: center;">
+                    <strong>3. EXPLANATION</strong><br>
+                    Explain importance
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 23: Citation Guide -->
+        <div class="slide" id="slide-23">
+            <h1>Citation Guide Resource</h1>
+
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div style="flex-shrink: 0;">
+                    <img src="owl.png" alt="Purdue OWL" style="max-width: 300px; border: 2px solid var(--text-main);">
+                </div>
+                <div>
+                    <h2 style="margin: 0;"><a href="https://owl.purdue.edu/" target="_blank">Purdue OWL</a></h2>
+                    <p>Purdue Online Writing Lab</p>
+                    <p style="font-size: 1.2rem;">The online writing lab offers global support through online reference
+                        materials and services for creating citations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 24: End -->
+        <div class="slide" id="slide-24" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 3.5rem; color: var(--accent-green); text-shadow: 4px 4px 0 #000;">
+                    THANK YOU!</h1>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn" onclick="prevSlide()" id="btn-prev"><i class="fas fa-caret-left"></i> PREV</button>
+            <div class="progress" id="slide-counter">1 / 24</div>
+            <button class="btn" onclick="nextSlide()" id="btn-next">NEXT <i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const counter = document.getElementById('slide-counter');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+
+            document.getElementById('btn-prev').style.opacity = currentSlide === 0 ? '0.5' : '1';
+            document.getElementById('btn-next').style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToStart() {
+            currentSlide = 0;
+            updateSlide();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        document.getElementById('game-boy-container').addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const width = window.innerWidth;
+            if (window.getSelection().toString().length === 0) {
+                if (e.clientX > width * 0.7) {
+                    nextSlide();
+                } else if (e.clientX < width * 0.3) {
+                    prevSlide();
+                }
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
