@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENGL/DIHU 155 - Week 4 Tutorial</title>
+    <!-- 引入像素风格字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* 配色方案：复古终端/暗色RPG风格 */
+            --bg-color: #1a1a24;
+            --screen-bg: #2d2d42;
+            --text-main: #c7c7d1;
+            --accent-green: #56e39f;
+            /* 成功/高亮 */
+            --accent-pink: #d64d4e;
+            /* 警告/重点 */
+            --accent-yellow: #f4d35e;
+            /* 标题 */
+            --accent-blue: #5d93e1;
+            /* 链接/信息 */
+            --border-color: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* CRT 屏幕容器效果 */
+        #game-boy-container {
+            width: 100vw;
+            max-width: 1920px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--screen-bg);
+            border: 4px solid var(--border-color);
+            box-shadow:
+                0 0 0 4px var(--bg-color),
+                0 0 0 8px var(--border-color),
+                10px 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* 扫描线特效 */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        /* 幻灯片通用样式 */
+        .slide {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            animation: fadeIn 0.5s steps(5);
+            width: 100%;
+            overflow-y: auto;
+
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) transparent;
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background-color: var(--accent-green);
+            border-radius: 3px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                text-shadow: 4px 4px 0 #000, 0 0 10px rgba(86, 227, 159, 0.3);
+            }
+
+            50% {
+                text-shadow: 4px 4px 0 #000, 0 0 20px rgba(86, 227, 159, 0.6);
+            }
+        }
+
+        .glow-text {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-yellow);
+            line-height: 1.4;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--accent-green);
+            margin-bottom: 0.8rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        p,
+        li,
+        td {
+            font-size: 1.6rem;
+            line-height: 1.4;
+        }
+
+        ul,
+        ol {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        ul li::before {
+            content: ">";
+            color: var(--accent-green);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* 链接样式 */
+        a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-green);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        a:hover {
+            background-color: var(--accent-green);
+            color: #000;
+            border-bottom-style: solid;
+        }
+
+        @keyframes link-blink {
+
+            0%,
+            100% {
+                border-bottom-color: var(--accent-green);
+            }
+
+            50% {
+                border-bottom-color: transparent;
+            }
+        }
+
+        a {
+            animation: link-blink 1.5s ease-in-out infinite;
+        }
+
+        a:hover {
+            animation: none;
+        }
+
+        /* 像素边框盒子 */
+        .pixel-box {
+            border: 2px solid var(--text-main);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+        }
+
+        .pixel-box::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-pink);
+        }
+
+        /* 强调文本 */
+        .highlight {
+            color: var(--accent-green);
+        }
+
+        .warning {
+            color: var(--accent-pink);
+        }
+
+        .info {
+            color: var(--accent-blue);
+        }
+
+        /* 导航控制器 - 紧凑版 */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-top: 2px solid var(--text-main);
+            z-index: 20;
+            background: var(--screen-bg);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--bg-color);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+            font-family: 'Press Start 2P', cursive;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: transform 0.1s;
+            box-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .progress {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #000;
+            padding: 5px 10px;
+            border: 2px solid var(--text-main);
+        }
+
+        /* 特殊布局调整 */
+        .split-layout {
+            display: flex;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        .split-col {
+            flex: 1;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            #game-boy-container {
+                width: 100%;
+                height: 100%;
+                border: none;
+                padding: 0.5rem;
+            }
+
+            h1 {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 0.8rem;
+            }
+
+            p,
+            li,
+            td {
+                font-size: 1rem;
+            }
+
+            .slide {
+                padding: 0.5rem;
+            }
+
+            .pixel-box {
+                padding: 0.8rem;
+            }
+
+            .split-layout {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-boy-container">
+        <div class="scanlines"></div>
+
+        <!-- SLIDE 1: Title -->
+        <div class="slide active" id="slide-1" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <p
+                    style="font-family: 'Press Start 2P'; font-size: 0.8rem; color: var(--accent-pink); margin-bottom: 1rem;">
+                    WEEK 4 TUTORIAL</p>
+                <h1 class="glow-text" style="font-size: 2.5rem; margin-top: 0; color: #fff;">ENGL / DIHU 155</h1>
+                <h2 style="color: var(--accent-yellow);">Reading, Writing, and Making<br>with Technology in the
+                    Humanities</h2>
+
+                <div class="pixel-box"
+                    style="display: inline-block; text-align: left; margin-top: 1.5rem; max-width: 800px;">
+                    <p style="margin-bottom: 0.5rem;"><strong
+                            style="color: var(--accent-yellow); text-shadow: 1px 1px 0px #000;">Zhehao Sun</strong></p>
+                    <p><strong>Contact:</strong> <a href="mailto:zhehao.sun@ubc.ca">zhehao.sun@ubc.ca</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Reminder -->
+        <div class="slide" id="slide-2" style="overflow: hidden;">
+            <h1 style="margin-bottom: 0.5rem;">REMINDER</h1>
+            <div style="width: 100%; margin: 0.5rem 0; flex: 1; min-height: 0; position: relative; z-index: 11;">
+                <img src="pic1.png" alt="Course Schedule"
+                    style="width: 100%; max-height: 100%; object-fit: contain; border: 2px solid var(--text-main);">
+            </div>
+            <div style="width: 100%; flex-shrink: 0; display: flex; gap: 1rem;">
+                <div class="pixel-box" style="flex: 1; font-size: 1.2rem; margin: 0.5rem 0; padding: 0.8rem;">
+                    <h3 class="highlight" style="margin-top: 0; font-size: 1rem;">Essay 1 Revisions:</h3>
+                    <ul style="margin: 0;">
+                        <li>Revisions in <span style="color: var(--accent-yellow);">week 6</span> (Tue & Wed)</li>
+                        <li>Bring original paper with feedback if needed</li>
+                        <li>Done in person during allotted time slots</li>
+                    </ul>
+                </div>
+                <div class="pixel-box" style="flex: 1; font-size: 1.2rem; margin: 0.5rem 0; padding: 0.8rem;">
+                    <h3 class="warning" style="margin-top: 0; font-size: 1rem;">Grade Contract Renegotiation:</h3>
+                    <ul style="margin: 0;">
+                        <li>Due <span style="color: var(--accent-yellow);">week 6</span> (in two weeks)</li>
+                        <li class="warning">Must rewrite even if maintaining current grade</li>
+                        <li>Contact via Canvas Messenger to renegotiate early</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: This Week Readings -->
+        <div class="slide" id="slide-3">
+            <h1>This Week Readings</h1>
+
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <ul>
+                    <li><strong>Okorafor, Nnedi.</strong> <em>The Book of Phoenix.</em> (Read first half by lecture.)</li>
+                    <li><strong>Jorge Luis Borges,</strong> <a href="https://canvas.ubc.ca/courses/179607/files/43797021?wrap=1" target="_blank">"The Library of Babel."</a> 1941</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Review - Last Week Readings -->
+        <div class="slide" id="slide-4">
+            <h1>Review: Last Week Readings</h1>
+
+            <div class="pixel-box">
+                <ul>
+                    <li><a href="https://canvas.ubc.ca/courses/179607/files/43796971?wrap=1" target="_blank"><strong>McLuhan, Marshall.</strong></a> "The Medium is the Message"</li>
+                    <li><a href="https://www.proquest.com/docview/751306357?sourcetype=Scholarly%20Journals" target="_blank"><strong>Marx, Leo.</strong></a> "'Technology': The Emergence of a Hazardous Concept"</li>
+                    <li><a href="https://canvas.ubc.ca/courses/179607/files/43797071?wrap=1" target="_blank"><strong>Acheson, Katherine O.</strong></a> Writing Essays About Literature</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Office Hours -->
+        <div class="slide" id="slide-5">
+            <h1>Office Hours</h1>
+
+            <div class="pixel-box" style="margin-bottom: 2rem;">
+                <h2 style="margin:0;"><a
+                        href="https://docs.google.com/document/d/1ivRm3RtELvlMPR0EycmPy_Bzi0Rd1ZilCOF9LtZafDQ/edit?tab=t.0"
+                        target="_blank" style="color: var(--accent-green);">Sign Up Sheet</a></h2>
+                <p class="highlight">Fridays 10:00 -12:00 (Zoom Meeting)</p>
+            </div>
+
+            <!-- Office Hours Screenshot -->
+            <div style="width: 100%; text-align: center;">
+                <img src="officeHours.png" alt="Office Hours Canvas Screenshot"
+                    style="max-width: 50%; border: 2px solid var(--text-main);">
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Writing Prompts -->
+        <div class="slide" id="slide-6">
+            <h1>10 Minutes Writing Prompts</h1>
+
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <h3 style="color: var(--accent-yellow); margin-top: 0;">'Technology' and 'The Medium' (<a href="https://www.proquest.com/docview/751306357?sourcetype=Scholarly%20Journals" target="_blank">Marx</a> ; <a href="https://canvas.ubc.ca/courses/179607/files/43796971?wrap=1" target="_blank">McLuhan</a>)</h3>
+                <ul>
+                    <li>Did you notice any similar themes within these readings? If so, what were they?</li>
+                    <li>How have any of these readings helped you better understand contemporary digital technologies that you use? If these readings did not help you understand the technologies/mediums being used, what new concepts are you beginning to grasp?</li>
+                    <li>What aspects of these readings did you find particularly difficult? How might we address these issues as a class?</li>
+                </ul>
+            </div>
+
+            <div class="pixel-box" style="border-color: var(--accent-green);">
+                <h3 style="color: var(--accent-green); margin-top: 0;">Writing Essays About Literature (<a href="https://canvas.ubc.ca/courses/179607/files/43797071?wrap=1" target="_blank">Acheson</a>)</h3>
+                <ul>
+                    <li>Why do you think Acheson suggests that you gather evidence BEFORE coming up with an argument?</li>
+                    <li>What is 'charting your evidence' and why is it useful for writers of literary criticism (That's you!)</li>
+                    <li>How have you gathered evidence for critical literary papers in previous classes?</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Essay 1 Overall Issues -->
+        <div class="slide" id="slide-7">
+            <h1>Essay 1 Overall Issues</h1>
+
+            <div class="pixel-box">
+                <ul>
+                    <li><strong style="color: var(--accent-yellow);">Reading the instructions</strong>
+                        <ul>
+                            <li style="margin-left: 1rem;">Be careful, be methodical, read them in full.</li>
+                            <li style="margin-left: 1rem;">Introduction structure.</li>
+                        </ul>
+                    </li>
+                    <li><strong style="color: var(--accent-yellow);">Formality in academic writing</strong>
+                        <ul>
+                            <li style="margin-left: 1rem;">Use of contractions in academic writing</li>
+                            <li style="margin-left: 1rem;">Wording choice</li>
+                        </ul>
+                    </li>
+                    <li><strong style="color: var(--accent-yellow);">Expansion and including a clear bridge</strong></li>
+                    <li><strong style="color: var(--accent-yellow);">MLA formatting</strong>
+                        <ul>
+                            <li style="margin-left: 1rem;">In-text citations</li>
+                            <li style="margin-left: 1rem;">Incorporating quotations</li>
+                            <li style="margin-left: 1rem;">Works Cited pages</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Themes of the Course -->
+        <div class="slide" id="slide-8">
+            <h1>Themes of the Course</h1>
+            <h2 style="color: #fff;">(from the syllabus)</h2>
+
+            <div class="pixel-box">
+                <p>When analyzing our own experiences with technology—especially digital technologies—how do we move beyond merely subjective or utility-focused responses?</p>
+            </div>
+
+            <div class="pixel-box" style="border-color: var(--accent-blue); background: rgba(93, 147, 225, 0.1);">
+                <p style="color: var(--accent-blue);">When writing about digital literature, how do we understand the way that histories of technology have shaped what media forms can express? How do we understand our role in producing and consuming digital media?</p>
+            </div>
+
+            <div class="pixel-box">
+                <p>Over the last half century, scholars of media, technology, and culture have developed a number of useful approaches to analyzing and engaging in technologies both new and old, to the point where we have a "toolkit" of critical strategies available to us. In this course, we will engage with a variety of cultural products across media platforms—such as digital, print, visual, or sound media—and learn how to analyze them using some of these critical strategies.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: Group Work -->
+        <div class="slide" id="slide-9">
+            <h1>Group Work</h1>
+            <h2 style="color: #fff;">Finding and Creating Definitions</h2>
+
+            <div class="split-layout" style="align-items: flex-start; flex: 1;">
+                <div class="split-col" style="flex: 1.2;">
+                    <div class="pixel-box" style="border-color: var(--accent-green);">
+                        <p>Find terms within <a href="https://canvas.ubc.ca/courses/179607/files/43796971?wrap=1" target="_blank">McLuhan</a> or <a href="https://www.proquest.com/docview/751306357?sourcetype=Scholarly%20Journals" target="_blank">Marx</a>'s work that relate to themes of the course</p>
+                    </div>
+
+                    <div class="pixel-box" style="border-color: var(--accent-pink);">
+                        <p>Write your impressions on these terms – how do they fit into the themes of the course?</p>
+                    </div>
+
+                    <div class="pixel-box">
+                        <p>Go to Google Doc and work in groups to create definitions for each term</p>
+                        <p style="font-size: 1.2rem; word-break: break-all;"><a href="https://docs.google.com/document/d/1txfse6M0Oa8lzeADRcKA6S6fgx4gaFWAAhVZW7LHAbA/edit?usp=sharing" target="_blank">https://docs.google.com/document/d/1txfse6M0Oa8lzeADRcKA6S6fgx4gaFWAAhVZW7LHAbA/edit?usp=sharing</a></p>
+                    </div>
+
+                    <p class="warning" style="font-size: 1.2rem;">This is exam prep! Defining course terminology and writing about those terms will make up the 'short answer' portion of the exam.</p>
+                </div>
+
+                <div class="split-col"
+                    style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                    <!-- QR Code -->
+                    <div style="background: #fff; padding: 0.8rem; border: 4px solid var(--accent-green);">
+                        <img src="QRcode_img(300x300).png" alt="QR Code" style="width: 280px; height: 280px; display: block;">
+                    </div>
+                    <p
+                        style="font-family: 'Press Start 2P'; font-size: 1rem; margin-top: 1rem; color: var(--accent-green);">
+                        Google Doc Link</p>
+                    <a href="https://docs.google.com/document/d/1txfse6M0Oa8lzeADRcKA6S6fgx4gaFWAAhVZW7LHAbA/edit?usp=sharing"
+                        target="_blank" style="font-size: 1.3rem; margin-top: 8px;">[CLICK TO OPEN]</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: Email Policy -->
+        <div class="slide" id="slide-10">
+            <h1>Email Policy</h1>
+            <h2 style="color: #fff;">ENGL/DIHU 155</h2>
+
+            <div class="pixel-box" style="font-size: 1.3rem;">
+                <p>"Your emails to your instructor and TA are the property of the university and a primary mode of communication in this educational and professional context. When you send me an email, please use appropriate greetings—including using my name and your own name in salutations—please write clearly in complete sentences, and provide me with the contextual information to understand whatever questions you might have.</p>
+
+                <p>I require at least <span style="color: var(--accent-yellow);">48 hours</span> to respond to emails, and I will not respond after business hours or on weekends. If you have questions regarding essays or assignments, you must ask them at least <span style="color: var(--accent-yellow);">48 hours</span> in advance of the due date; I cannot promise that I will respond in time to assignment-related emails after this point. If you have a question that you can easily answer by looking at the Syllabus, I will refer you there.</p>
+
+                <p>TAs will set their own email policies. I will encourage them to set similar boundaries to mine so that students get their questions answered and TAs are able to manage their time effectively."</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: Purdue OWL -->
+        <div class="slide" id="slide-11">
+            <h1>Citation Guide Resource</h1>
+
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div style="flex-shrink: 0;">
+                    <img src="owl.png" alt="Purdue OWL" style="max-width: 450px; border: 2px solid var(--text-main);">
+                </div>
+                <div>
+                    <h2 style="margin: 0;"><a href="https://owl.purdue.edu/" target="_blank">Purdue OWL</a></h2>
+                    <p>Purdue Online Writing Lab</p>
+                    <p style="font-size: 1.2rem;">The online writing lab offers global support through online reference
+                        materials and services for creating citations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: End -->
+        <div class="slide" id="slide-12" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 3.5rem; color: var(--accent-green); text-shadow: 4px 4px 0 #000;">
+                    THANK YOU!</h1>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn" onclick="prevSlide()" id="btn-prev"><i class="fas fa-caret-left"></i> PREV</button>
+            <div class="progress" id="slide-counter">1 / 12</div>
+            <button class="btn" onclick="nextSlide()" id="btn-next">NEXT <i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const counter = document.getElementById('slide-counter');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+
+            document.getElementById('btn-prev').style.opacity = currentSlide === 0 ? '0.5' : '1';
+            document.getElementById('btn-next').style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToStart() {
+            currentSlide = 0;
+            updateSlide();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        document.getElementById('game-boy-container').addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const width = window.innerWidth;
+            if (window.getSelection().toString().length === 0) {
+                if (e.clientX > width * 0.7) {
+                    nextSlide();
+                } else if (e.clientX < width * 0.3) {
+                    prevSlide();
+                }
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
