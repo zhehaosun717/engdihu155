@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENGL/DIHU 155 - Week 5 Tutorial</title>
+    <!-- 引入像素风格字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --screen-bg: #2d2d42;
+            --text-main: #c7c7d1;
+            --accent-green: #56e39f;
+            --accent-pink: #d64d4e;
+            --accent-yellow: #f4d35e;
+            --accent-blue: #5d93e1;
+            --border-color: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-boy-container {
+            width: 100vw;
+            max-width: 1920px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--screen-bg);
+            border: 4px solid var(--border-color);
+            box-shadow:
+                0 0 0 4px var(--bg-color),
+                0 0 0 8px var(--border-color),
+                10px 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            animation: fadeIn 0.5s steps(5);
+            width: 100%;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) transparent;
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background-color: var(--accent-green);
+            border-radius: 3px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 4px 4px 0 #000, 0 0 10px rgba(86, 227, 159, 0.3);
+            }
+            50% {
+                text-shadow: 4px 4px 0 #000, 0 0 20px rgba(86, 227, 159, 0.6);
+            }
+        }
+
+        .glow-text {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-yellow);
+            line-height: 1.4;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--accent-green);
+            margin-bottom: 0.8rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        p, li, td {
+            font-size: 1.6rem;
+            line-height: 1.4;
+        }
+
+        ul, ol {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        ul li::before {
+            content: ">";
+            color: var(--accent-green);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-green);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        a:hover {
+            background-color: var(--accent-green);
+            color: #000;
+            border-bottom-style: solid;
+        }
+
+        @keyframes link-blink {
+            0%, 100% {
+                border-bottom-color: var(--accent-green);
+            }
+            50% {
+                border-bottom-color: transparent;
+            }
+        }
+
+        a {
+            animation: link-blink 1.5s ease-in-out infinite;
+        }
+
+        a:hover {
+            animation: none;
+        }
+
+        .pixel-box {
+            border: 2px solid var(--text-main);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+        }
+
+        .pixel-box::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-pink);
+        }
+
+        .highlight {
+            color: var(--accent-green);
+        }
+
+        .warning {
+            color: var(--accent-pink);
+        }
+
+        .info {
+            color: var(--accent-blue);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-top: 2px solid var(--text-main);
+            z-index: 20;
+            background: var(--screen-bg);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--bg-color);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+            font-family: 'Press Start 2P', cursive;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: transform 0.1s;
+            box-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        /* 班级切换按钮样式 */
+        .class-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .class-toggle .btn {
+            padding: 6px 20px;
+            font-size: 0.8rem;
+        }
+
+        .class-toggle .btn.active {
+            background: var(--accent-green);
+            color: #000;
+            border-color: var(--accent-green);
+        }
+
+        .class-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .class-content.hidden {
+            display: none;
+        }
+
+        .progress {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #000;
+            padding: 5px 10px;
+            border: 2px solid var(--text-main);
+        }
+
+        .split-layout {
+            display: flex;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        .split-col {
+            flex: 1;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-yellow);
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: var(--text-main);
+        }
+
+        @media (max-width: 768px) {
+            #game-boy-container {
+                width: 100%;
+                height: 100%;
+                border: none;
+                padding: 0.5rem;
+            }
+
+            h1 {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 0.8rem;
+            }
+
+            p, li, td {
+                font-size: 1rem;
+            }
+
+            .slide {
+                padding: 0.5rem;
+            }
+
+            .pixel-box {
+                padding: 0.8rem;
+            }
+
+            .split-layout {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-boy-container">
+        <div class="scanlines"></div>
+
+        <!-- SLIDE 1: Title -->
+        <div class="slide active" id="slide-1" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <p style="font-family: 'Press Start 2P'; font-size: 0.8rem; color: var(--accent-pink); margin-bottom: 1rem;">
+                    WEEK 5 TUTORIAL</p>
+                <h1 class="glow-text" style="font-size: 2.5rem; margin-top: 0; color: #fff;">ENGL / DIHU 155</h1>
+                <h2 style="color: var(--accent-yellow);">Reading, Writing, and Making<br>with Technology in the Humanities</h2>
+
+                <div class="pixel-box" style="display: inline-block; text-align: left; margin-top: 1.5rem; max-width: 800px;">
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--accent-yellow); text-shadow: 1px 1px 0px #000;">Zhehao Sun</strong></p>
+                    <p><strong>Contact:</strong> <a href="mailto:zhehao.sun@ubc.ca">zhehao.sun@ubc.ca</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Reminder -->
+        <div class="slide" id="slide-2" style="overflow: hidden;">
+            <h1 style="margin-bottom: 0.5rem;">REMINDER</h1>
+            <!-- 图片区域 -->
+            <div style="width: 100%; margin: 0.5rem 0; flex: 0.8; min-height: 0; position: relative; z-index: 11;">
+                <img src="pic1.png" alt="Course Schedule"
+                    style="width: 100%; max-height: 100%; object-fit: contain; border: 2px solid var(--text-main);">
+            </div>
+            <!-- 文字区域 -->
+            <div style="width: 100%; flex-shrink: 0; display: flex; gap: 1rem;">
+                <div class="pixel-box" style="flex: 1; margin: 0.3rem 0; padding: 0.6rem;">
+                    <h3 class="highlight" style="margin-top: 0; font-size: 0.9rem;">Essay Revisions:</h3>
+                    <ul style="font-size: 1.1rem; margin: 0;">
+                        <li>Essay Revisions must be completed in-person Tuesday or Wednesday of next week</li>
+                        <li><span style="color: var(--accent-yellow);">February 10th and 11th</span> from 10:00 am – 12:00 pm</li>
+                    </ul>
+                </div>
+                <div class="pixel-box" style="flex: 1; margin: 0.3rem 0; padding: 0.6rem;">
+                    <h3 class="warning" style="margin-top: 0; font-size: 0.9rem;">Grade Contract Renegotiation:</h3>
+                    <ul style="font-size: 1.1rem; margin: 0;">
+                        <li>Grade Contract renegotiation due <span style="color: var(--accent-yellow);">week 6</span></li>
+                        <li class="warning">You must rewrite this even if you are maintaining your current grade contract</li>
+                        <li>You can change your grade beforehand – this can lead to lighter revisions on your essay</li>
+                        <li>To renegotiate your grade early, reach out to myself and Dr. Murphy via canvas messenger</li>
+                        <li>Engagement assignments <span style="color: var(--accent-yellow);">week 6</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: This Week Readings -->
+        <div class="slide" id="slide-3" style="justify-content: center; align-items: center;">
+            <div style="width: 100%; max-width: 900px;">
+                <h1 style="text-align: center;">This Week Readings</h1>
+
+                <div class="pixel-box" style="border-color: var(--accent-yellow); padding: 2rem; margin-top: 2rem;">
+                    <ul style="font-size: 2rem;">
+                        <li style="margin-bottom: 1.5rem;"><strong>Okorafor, Nnedi.</strong> <em>The Book of Phoenix.</em><br><span style="color: var(--accent-yellow); margin-left: 1.5rem;">(Read Second half by lecture.)</span></li>
+                        <li><strong>They Say I Say</strong> Chapters 8 and 9<br><span style="color: var(--accent-green); margin-left: 1.5rem;">(Tying it all together)</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Review - Last Week Readings -->
+        <div class="slide" id="slide-4" style="justify-content: center; align-items: center;">
+            <div style="width: 100%; max-width: 900px;">
+                <h1 style="text-align: center;">Review: Last Week Readings</h1>
+
+                <div class="pixel-box" style="padding: 2rem; margin-top: 2rem;">
+                    <ul style="font-size: 2rem;">
+                        <li style="margin-bottom: 1.5rem;"><strong>Okorafor, Nnedi.</strong> <em>The Book of Phoenix.</em><br><span style="color: var(--accent-yellow); margin-left: 1.5rem;">(Read first half by lecture.)</span></li>
+                        <li><strong>Jorge Luis Borges,</strong> <a href="https://canvas.ubc.ca/courses/179607/files/43797021?wrap=1" target="_blank">"The Library of Babel."</a> 1941</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Office Hours -->
+        <div class="slide" id="slide-5">
+            <h1>Office Hours</h1>
+
+            <div class="pixel-box" style="margin-bottom: 2rem;">
+                <h2 style="margin:0;"><a href="https://docs.google.com/document/d/1ivRm3RtELvlMPR0EycmPy_Bzi0Rd1ZilCOF9LtZafDQ/edit?tab=t.0" target="_blank" style="color: var(--accent-green);">Sign Up Sheet</a></h2>
+                <p class="highlight">Fridays 10:00 - 12:00 (Zoom Meeting)</p>
+            </div>
+
+            <div style="width: 100%; text-align: center;">
+                <img src="officeHours.png" alt="Office Hours Canvas Screenshot" style="max-width: 50%; border: 2px solid var(--text-main);">
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Writing Prompts -->
+        <div class="slide" id="slide-6">
+            <h1>10 Minutes Writing Prompts</h1>
+            <h2 style="color: #fff;">The Book of Phoenix & The Library of Babel</h2>
+
+            <div class="split-layout">
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-yellow);">
+                    <h3 style="color: var(--accent-yellow); margin-top: 0;">The Book of Phoenix:</h3>
+                    <ul style="font-size: 1.3rem;">
+                        <li>What themes have you identified in the book so far?</li>
+                        <li>Identify the antagonists and protagonists and discuss their relationship</li>
+                        <li>The Book of Phoenix is described as a Sci-Fi. Are there any other genres that you believe it could fall under, and why?</li>
+                    </ul>
+                </div>
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-green);">
+                    <h3 style="color: var(--accent-green); margin-top: 0;">The Library of Babel:</h3>
+                    <ul style="font-size: 1.3rem;">
+                        <li>What themes have you identified in the story?</li>
+                        <li>Can you think of any related stories or important cultural context for this work?</li>
+                        <li>What is the setting? (Past or future? Physical design of the library) and what is the setting's significance?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: What is a Theme -->
+        <div class="slide" id="slide-7">
+            <h1>What is a 'Theme' in Literature?</h1>
+            <p class="info" style="font-size: 1rem;">"Theme" <a href="https://www.litcharts.com/literary-devices-and-terms/theme" target="_blank">LitCharts</a>, 30 January 2026</p>
+
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <p>A <strong style="color: var(--accent-yellow);">theme</strong> is a universal idea, lesson, or message explored throughout a work of literature. One key characteristic of literary themes is their <strong>universality</strong>, which is to say that themes are ideas that not only apply to the specific characters and events of a book or play, but also express broader truths about human experience that readers can apply to their own lives.</p>
+            </div>
+
+            <div class="pixel-box">
+                <h3 style="margin-top: 0;">Example:</h3>
+                <p>John Steinbeck's <em>The Grapes of Wrath</em> (about a family of tenant farmers who are displaced from their land in Oklahoma) is a book whose themes might be said to include the <span class="highlight">inhumanity of capitalism</span>, as well as the <span class="highlight">vitality and necessity of family and friendship</span>.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Additional Details about Theme -->
+        <div class="slide" id="slide-8">
+            <h1>Additional Key Details About Theme</h1>
+
+            <div class="pixel-box">
+                <ul style="font-size: 1.3rem;">
+                    <li>All works of literature have themes. The same work can have <strong>multiple themes</strong>.</li>
+                    <li>Themes are sometimes divided into <span style="color: var(--accent-yellow);">thematic concepts</span> and <span style="color: var(--accent-green);">thematic statements</span>.</li>
+                    <li>A work's <span style="color: var(--accent-yellow);">thematic concept</span> is the broader topic it touches upon (love, forgiveness, pain, etc.)</li>
+                    <li>Its <span style="color: var(--accent-green);">thematic statement</span> is what the work says about that topic. (e.g., "Love is blind")</li>
+                </ul>
+            </div>
+            <div class="pixel-box" style="border-color: var(--accent-pink);">
+                <p style="font-size: 1.3rem;">Themes are almost never stated explicitly. Look for a repeating symbol, <a href="https://www.litcharts.com/literary-devices-and-terms/motif" target="_blank"><strong>motif</strong></a>, or phrase that appears again and again throughout a story.</p>
+            </div>
+            <p class="info" style="font-size: 1rem; margin-top: 0.5rem;">"Theme" <a href="https://www.litcharts.com/literary-devices-and-terms/theme" target="_blank">LitCharts</a>, 30 January 2026</p>
+        </div>
+
+        <!-- SLIDE 9: Think-Pair-Share Activity -->
+        <div class="slide" id="slide-9" style="justify-content: center;">
+            <h1>Think – Pair – Share Activity</h1>
+            <h2 style="color: #fff;">The Book of Phoenix</h2>
+
+            <div style="display: flex; gap: 2rem; width: 100%; margin-top: 2rem;">
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-yellow); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
+                    <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1rem; color: var(--accent-yellow);"><i class="fas fa-book-open"></i></div>
+                    <p style="font-size: 1.5rem; text-align: center;">We are going to read a passage from <em>The Book of Phoenix</em></p>
+                </div>
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-green); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
+                    <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1rem; color: var(--accent-green);"><i class="fas fa-pencil-alt"></i></div>
+                    <p style="font-size: 1.5rem; text-align: center;">On your own, write out your <strong>first impressions</strong> about this passage – themes or anything else literary worth noting</p>
+                </div>
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-pink); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
+                    <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1rem; color: var(--accent-pink);"><i class="fas fa-table"></i></div>
+                    <p style="font-size: 1.5rem; text-align: center;">Create a small <strong>evidence chart</strong> (as per the Acheson reading)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: Phoenix Quote Passage -->
+        <div class="slide" id="slide-10">
+            <h1>The Book of Phoenix</h1>
+            <h2 style="color: #fff;">Passage</h2>
+
+            <!-- 文章内容 -->
+            <div class="pixel-box" style="border-color: var(--accent-yellow); font-size: 2.3rem; margin-bottom: 1rem;">
+                <blockquote style="border-left-color: var(--accent-green); margin: 0;">
+                    <p style="margin: 0 0 0.8rem 0;">"One must stop time to listen to a story. The storyteller starts it again. She starts it in her own place, in her own moment, in her own point of view. As long as you listen, she is in charge of your destiny. You and the storyteller share everything, even your existence.</p>
+                    <p style="margin: 0 0 0.8rem 0;">Listen…</p>
+                    <p style="margin: 0 0 0.8rem 0;">I started picking up the local accent. I could never fit in, so that wasn't the reason. I just liked the sound of it. I missed my love Saeed, my friend Mmuo, the other Tower 7 prisoners who weren't so nice to me. Speaking like the Ghanaians reminded me of them all. Plus, after all that had happened, it felt good to be different from what I had been, yet the same. That which was me would never change. That which was me could survive death. Over and over.</p>
+                    <p style="margin: 0;"><strong style="color: var(--accent-yellow);">I was Phoenix.</strong>"</p>
+                </blockquote>
+            </div>
+
+            <!-- 切换按钮和二维码区域 -->
+            <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 3rem; flex: 1;">
+                <!-- 切换按钮 -->
+                <div class="class-toggle" style="flex-direction: column; gap: 1rem;">
+                    <button class="btn active" onclick="switchClass('T2D')" style="padding: 15px 40px; font-size: 1.2rem;">T2D</button>
+                    <button class="btn" onclick="switchClass('T2B')" style="padding: 15px 40px; font-size: 1.2rem;">T2B</button>
+                </div>
+
+                <!-- T2D 内容 -->
+                <div id="class-T2D" class="class-content" style="align-items: center; gap: 2rem;">
+                    <div style="background: #fff; padding: 1rem; border: 4px solid var(--accent-green);">
+                        <img src="QRcode_T2D.png" alt="QR Code T2D" style="width: 250px; height: 250px; display: block;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <p style="font-family: 'Press Start 2P', cursive; font-size: 1rem; color: var(--accent-green); margin: 0 0 0.5rem 0;">Google Doc</p>
+                        <a href="https://docs.google.com/document/d/1P7T7T23pmsF9HF-dBlrP3kzlQgwcYEXEqwRsjFsg72k/edit?usp=sharing" target="_blank" style="font-size: 1.8rem;">[CLICK TO OPEN - T2D]</a>
+                    </div>
+                </div>
+
+                <!-- T2B 内容 -->
+                <div id="class-T2B" class="class-content hidden" style="align-items: center; gap: 2rem;">
+                    <div style="background: #fff; padding: 1rem; border: 4px solid var(--accent-green);">
+                        <img src="QRcode_T2B.png" alt="QR Code T2B" style="width: 250px; height: 250px; display: block;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <p style="font-family: 'Press Start 2P', cursive; font-size: 1rem; color: var(--accent-green); margin: 0 0 0.5rem 0;">Google Doc</p>
+                        <a href="https://docs.google.com/document/d/1sDihI5ay6khz7U8bx29Y8SqHmpKZtNREnr7a4yoyQEk/edit?usp=sharing" target="_blank" style="font-size: 1.8rem;">[CLICK TO OPEN - T2B]</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: Evidence Chart -->
+        <div class="slide" id="slide-11">
+            <h1 style="font-size: 1.5rem;">Evidence Chart</h1>
+            <h2 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">Third Version: Adding Evidence About Social Context</h2>
+
+            <div style="flex: 1; width: 100%; display: flex; flex-direction: column;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 1.1rem; flex: 1;">
+                    <thead>
+                        <tr>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: transparent; width: 15%;"></th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-pink); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">MATERIAL REALITY</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-yellow); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">MARRIAGE</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-green); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">SENSUOUSNESS</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-blue); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">EMOTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle; font-weight: bold; color: var(--accent-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.7rem;">Poem</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">"the plums" 2<br>"the icebox" 4<br>"breakfast" 8<br>"that" 3, "which" 5 (deictics)</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Title<br>"I/me," "you"<br>"icebox" 4, "breakfast" 8 (domesticity)<br>"you were probably saving" 6–7</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">"I have eaten" 1<br>"delicious" 10<br>"sweet" 11<br>"cold" 12</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Title<br>"I/me," "you"<br>"Forgive me" 9</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle; font-weight: bold; color: var(--accent-green); font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">Reference Works</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Dictionary: Anglo-Saxon words</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Biography: Williams's marriage</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Dictionary: plum</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Edition: "Reply"</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle; font-weight: bold; color: var(--accent-pink); font-family: 'Press Start 2P', cursive; font-size: 0.55rem;">Social & Historical</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Women's work labour intensive<br>Food an important part of women's lives</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Nuclear family</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Intimacy in marriage</td>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: middle;">Wife isolated</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pixel-box" style="margin-top: 0.5rem; padding: 0.6rem; flex-shrink: 0;">
+                <p style="margin: 0 0 0.3rem 0; font-size: 1.3rem;"><strong>First Impressions, Reviewed:</strong></p>
+                <p style="font-style: italic; margin: 0 0 0.3rem 0; font-size: 1.3rem;">My first impressions, from my close reading of the poem, were as follows:</p>
+                <ol style="font-size: 1.3rem; margin: 0;">
+                    <li>"This Is Just To Say" is about sensual, moral, and interpersonal experience in the material, everyday world.</li>
+                    <li>"This Is Just To Say" is about relationships between people and how these relationships are shaped by use of language.</li>
+                    <li>"This Is Just To Say" is about poetry and how it is different or the same as everyday acts of communication.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: Purdue OWL -->
+        <div class="slide" id="slide-12">
+            <h1>Citation Guide Resource</h1>
+
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div style="flex-shrink: 0;">
+                    <img src="owl.png" alt="Purdue OWL" style="max-width: 450px; border: 2px solid var(--text-main);">
+                </div>
+                <div>
+                    <h2 style="margin: 0;"><a href="https://owl.purdue.edu/" target="_blank">Purdue OWL</a></h2>
+                    <p>Purdue Online Writing Lab</p>
+                    <p style="font-size: 1.2rem;">The online writing lab offers global support through online reference materials and services for creating citations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 13: End -->
+        <div class="slide" id="slide-13" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 3.5rem; color: var(--accent-green); text-shadow: 4px 4px 0 #000;">
+                    THANK YOU!</h1>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn" onclick="prevSlide()" id="btn-prev"><i class="fas fa-caret-left"></i> PREV</button>
+            <div class="progress" id="slide-counter">1 / 13</div>
+            <button class="btn" onclick="nextSlide()" id="btn-next">NEXT <i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const counter = document.getElementById('slide-counter');
+
+        // 班级切换函数
+        function switchClass(className) {
+            // 隐藏所有class-content
+            document.querySelectorAll('.class-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // 显示选中的班级内容
+            document.getElementById('class-' + className).classList.remove('hidden');
+            // 更新按钮状态
+            document.querySelectorAll('.class-toggle .btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === className) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+
+            document.getElementById('btn-prev').style.opacity = currentSlide === 0 ? '0.5' : '1';
+            document.getElementById('btn-next').style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToStart() {
+            currentSlide = 0;
+            updateSlide();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        document.getElementById('game-boy-container').addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const width = window.innerWidth;
+            if (window.getSelection().toString().length === 0) {
+                if (e.clientX > width * 0.7) {
+                    nextSlide();
+                } else if (e.clientX < width * 0.3) {
+                    prevSlide();
+                }
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
