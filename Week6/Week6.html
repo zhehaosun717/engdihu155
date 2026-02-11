@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENGL/DIHU 155 - Week 6 Tutorial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --screen-bg: #2d2d42;
+            --text-main: #c7c7d1;
+            --accent-green: #56e39f;
+            --accent-pink: #d64d4e;
+            --accent-yellow: #f4d35e;
+            --accent-blue: #5d93e1;
+            --border-color: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-boy-container {
+            width: 100vw;
+            max-width: 1920px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--screen-bg);
+            border: 4px solid var(--border-color);
+            box-shadow: 0 0 0 4px var(--bg-color), 0 0 0 8px var(--border-color), 10px 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            animation: fadeIn 0.5s steps(5);
+            width: 100%;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) transparent;
+        }
+
+        .slide::-webkit-scrollbar { width: 6px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+        .slide::-webkit-scrollbar-thumb { background-color: var(--accent-green); border-radius: 3px; }
+        .slide.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 4px 4px 0 #000, 0 0 10px rgba(86, 227, 159, 0.3); }
+            50% { text-shadow: 4px 4px 0 #000, 0 0 20px rgba(86, 227, 159, 0.6); }
+        }
+
+        .glow-text { animation: glow 2s ease-in-out infinite; }
+
+        h1, h2, h3, h4 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-yellow);
+            line-height: 1.4;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 1rem; margin-top: 0; }
+        h2 { font-size: 1.5rem; color: var(--accent-green); margin-bottom: 0.8rem; }
+        h3 { font-size: 1.3rem; margin-top: 1rem; margin-bottom: 0.5rem; color: #fff; }
+
+        p, li, td { font-size: 1.6rem; line-height: 1.4; }
+
+        ul, ol {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        li { margin-bottom: 0.5rem; }
+        ul li::before { content: ">"; color: var(--accent-green); margin-right: 8px; font-weight: bold; }
+
+        a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-green);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        a:hover { background-color: var(--accent-green); color: #000; border-bottom-style: solid; }
+
+        @keyframes link-blink {
+            0%, 100% { border-bottom-color: var(--accent-green); }
+            50% { border-bottom-color: transparent; }
+        }
+        a { animation: link-blink 1.5s ease-in-out infinite; }
+        a:hover { animation: none; }
+
+        .pixel-box {
+            border: 2px solid var(--text-main);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+        }
+        .pixel-box::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-pink);
+        }
+
+        .highlight { color: var(--accent-green); }
+        .warning { color: var(--accent-pink); }
+        .info { color: var(--accent-blue); }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-top: 2px solid var(--text-main);
+            z-index: 20;
+            background: var(--screen-bg);
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--bg-color);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+            font-family: 'Press Start 2P', cursive;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: transform 0.1s;
+            box-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+        }
+        .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #000; }
+
+        .class-toggle { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .class-toggle .btn { padding: 6px 20px; font-size: 0.8rem; }
+        .class-toggle .btn.active { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+
+        .class-content { display: flex; align-items: center; gap: 1.5rem; }
+        .class-content.hidden { display: none; }
+
+        .progress {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #000;
+            padding: 5px 10px;
+            border: 2px solid var(--text-main);
+        }
+
+        .split-layout { display: flex; width: 100%; gap: 1.5rem; }
+        .split-col { flex: 1; }
+
+        blockquote {
+            border-left: 4px solid var(--accent-yellow);
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: var(--text-main);
+        }
+
+        @media (max-width: 768px) {
+            #game-boy-container { width: 100%; height: 100%; border: none; padding: 0.5rem; }
+            h1 { font-size: 1rem; }
+            h2 { font-size: 0.8rem; }
+            p, li, td { font-size: 1rem; }
+            .slide { padding: 0.5rem; }
+            .pixel-box { padding: 0.8rem; }
+            .split-layout { flex-direction: column; gap: 0.8rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-boy-container">
+        <div class="scanlines"></div>
+
+        <!-- SLIDE 1: Title -->
+        <div class="slide active" id="slide-1" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <p style="font-family: 'Press Start 2P'; font-size: 0.8rem; color: var(--accent-pink); margin-bottom: 1rem;">WEEK 6 TUTORIAL</p>
+                <h1 class="glow-text" style="font-size: 2.5rem; margin-top: 0; color: #fff;">ENGL / DIHU 155</h1>
+                <h2 style="color: var(--accent-yellow);">Reading, Writing, and Making<br>with Technology in the Humanities</h2>
+                <div class="pixel-box" style="display: inline-block; text-align: left; margin-top: 1.5rem; max-width: 800px;">
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--accent-yellow); text-shadow: 1px 1px 0px #000;">Zhehao Sun</strong></p>
+                    <p><strong>Contact:</strong> <a href="mailto:zhehao.sun@ubc.ca">zhehao.sun@ubc.ca</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Reminder -->
+        <div class="slide" id="slide-2" style="overflow: hidden;">
+            <h1 style="margin-bottom: 0.5rem;">Reminder</h1>
+            <div style="width: 100%; margin: 0.5rem 0; flex: 0.8; min-height: 0; position: relative; z-index: 11;">
+                <img src="pic1.png" alt="Course Schedule" style="width: 100%; max-height: 100%; object-fit: contain; border: 2px solid var(--text-main);">
+            </div>
+            <div style="width: 100%; flex-shrink: 0; display: flex; gap: 1rem;">
+                <div class="pixel-box" style="flex: 1; margin: 0.3rem 0; padding: 0.6rem;">
+                    <h3 class="highlight" style="margin-top: 0; font-size: 0.9rem;">Essay 2:</h3>
+                    <ul style="font-size: 1.1rem; margin: 0;">
+                        <li>Monday after Reading Week (<span style="color: var(--accent-yellow);">February 23rd, Week 8</span>)</li>
+                    </ul>
+                </div>
+                <div class="pixel-box" style="flex: 1; margin: 0.3rem 0; padding: 0.6rem;">
+                    <h3 class="warning" style="margin-top: 0; font-size: 0.9rem;">Grade Contract Renegotiation:</h3>
+                    <ul style="font-size: 1.1rem; margin: 0;">
+                        <li>Due <span style="color: var(--accent-yellow);">February 23rd</span></li>
+                        <li class="warning">You must rewrite this even if maintaining your current grade contract</li>
+                        <li>No tutorial on Week 8</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: Week 9 Reading -->
+        <div class="slide" id="slide-3">
+            <h1>Week 9 Reading</h1>
+            <p style="color: var(--accent-yellow); font-size: 1.2rem; margin-bottom: 1rem;">WEEK 9 - March 2</p>
+            
+            <div class="pixel-box" style="border-color: var(--accent-yellow); margin: 0.5rem 0;">
+                <h3 style="color: var(--accent-yellow); margin-top: 0; font-size: 1rem;">Lecture Topics:</h3>
+                <p style="font-size: 1.2rem; margin: 0;">Image Analysis; Visual Evidence; Logical Progression</p>
+            </div>
+            
+            <div class="pixel-box" style="margin: 0.5rem 0;">
+                <h3 style="margin-top: 0; font-size: 1rem;">Lecture Readings:</h3>
+                <ul style="font-size: 1.1rem;">
+                    <li><strong>Hayles, Katherine.</strong> <a href="https://www.lab404.com/142/hayles_print_is_flat.pdf" target="_blank">"Print is Flat, Code is Deep: The Importance of Media-Specific Analysis."</a></li>
+                    <li><strong>Picasso, Pablo.</strong> <a href="https://www.museoreinasofia.es/en/collection/artwork/guernica" target="_blank">Guernica. 1939.</a></li>
+                    <li><strong>Sachant, Pamela et al.</strong> <a href="https://tinyurl.com/5n8kfz5m" target="_blank">"4.2: Formal or Critical Analysis."</a> <em>Introduction to Art: Design, Context, and Meaning.</em> LibreTexts, 2021.</li>
+                    <li><strong>TSIS</strong> <a href="https://drive.google.com/file/d/1UCaHSnHXChX9dUMJGhPhDo24NfJci2Hx/view?usp=drive_link" target="_blank">"Chapter 10: 'You Mean I can Just Say It That Way?': Academic Writing Doesn't Mean Setting Aside Your Own Voice."</a></li>
+                    <li><strong>TSIS</strong> <a href="https://drive.google.com/file/d/13Z5NM_Zu71-Uuhs3joxnqiZmDuewjPFe/view?usp=drive_link" target="_blank">"Chapter 7: 'In My Experience: Using Personal Stories To Energize Your Argument'"</a></li>
+                </ul>
+            </div>
+            
+            <div class="pixel-box" style="border-color: var(--accent-green); margin: 0.5rem 0;">
+                <h3 style="color: var(--accent-green); margin-top: 0; font-size: 1rem;">Tutorial Topics:</h3>
+                <p style="font-size: 1.2rem; margin: 0;">Writing is Revision</p>
+            </div>
+            
+            <div class="pixel-box" style="margin: 0.5rem 0;">
+                <h3 style="margin-top: 0; font-size: 1rem;">Tutorial Readings:</h3>
+                <ul style="font-size: 1.1rem;">
+                    <li><strong>TSIS.</strong> <a href="https://drive.google.com/file/d/1uZ0X6sttFNJvFGXedFKwXbaJ1P-WVkrF/view?usp=drive_link" target="_blank">"Chapter 12: 'What I Really Want to Say Is': Revising Substantially"</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Review Last Week Readings -->
+        <div class="slide" id="slide-4" style="justify-content: center; align-items: center;">
+            <div style="width: 100%; max-width: 900px;">
+                <h1 style="text-align: center;">Review: Last Week Readings</h1>
+                <div class="pixel-box" style="border-color: var(--accent-yellow); padding: 2rem; margin-top: 2rem;">
+                    <ul style="font-size: 1.8rem;">
+                        <li style="margin-bottom: 1.5rem;"><strong>Okorafor, Nnedi.</strong> <em>The Book of Phoenix.</em><br><span style="color: var(--accent-yellow); margin-left: 1.5rem;"></span></li>
+                        <li><strong>They Say I Say</strong> <a href="https://drive.google.com/file/d/1oLPH4m46fVp8Ti-4bP5zUgaMfhqlaIy3/view?usp=drive_link" target="_blank">Chapter 8</a> and <a href="https://drive.google.com/file/d/1CfQOm6x8iitmraJOdjBd7g_V4bSa7RSL/view?usp=drive_link" target="_blank">Chapter 9</a><br><span style="color: var(--accent-green); margin-left: 1.5rem;"></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Office Hours -->
+        <div class="slide" id="slide-5">
+            <h1>Office Hours</h1>
+            <div class="pixel-box" style="margin-bottom: 2rem;">
+                <h2 style="margin:0;"><a href="https://docs.google.com/document/d/1ivRm3RtELvlMPR0EycmPy_Bzi0Rd1ZilCOF9LtZafDQ/edit?tab=t.0" target="_blank" style="color: var(--accent-green);">Sign Up Sheet</a></h2>
+                <p class="highlight">Fridays 10:00 - 12:00 (Zoom Meeting)</p>
+            </div>
+            <div style="width: 100%; text-align: center;">
+                <img src="officeHours.png" alt="Office Hours" style="max-width: 50%; border: 2px solid var(--text-main);">
+            </div>
+        </div>
+
+        <!-- SLIDE 6: What is a Theme -->
+        <div class="slide" id="slide-6">
+            <h1>What is a 'theme' in literature?</h1>
+            <p class="info" style="font-size: 1rem;">"Theme" <a href="https://www.litcharts.com/literary-devices-and-terms/theme" target="_blank">LitCharts</a>, 30 January 2026</p>
+            <div class="pixel-box" style="border-color: var(--accent-yellow);">
+                <p>A <strong style="color: var(--accent-yellow);">theme</strong> is a universal idea, lesson, or message explored throughout a work of literature. One key characteristic of literary themes is their <strong>universality</strong>, which is to say that themes are ideas that not only apply to the specific characters and events of a book or play, but also express broader truths about human experience that readers can apply to their own lives.</p>
+            </div>
+            <div class="pixel-box">
+                <p>For example, John Steinbeck's <em>The Grapes of Wrath</em> (about a family of tenant farmers who are displaced from their land in Oklahoma) is a book whose themes might be said to include the <span class="highlight">inhumanity of capitalism</span>, as well as the <span class="highlight">vitality and necessity of family and friendship</span>.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: 10 Minutes Writing Prompt -->
+        <div class="slide" id="slide-7">
+            <h1>10 Minutes Writing Prompt</h1>
+            <div class="split-layout">
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-yellow);">
+                    <h3 style="color: var(--accent-yellow); margin-top: 0;">The Book of Phoenix:</h3>
+                    <ul style="font-size: 1.2rem;">
+                        <li>What new themes have you discovered in Book of Phoenix?</li>
+                        <li>How have the themes from last class shown up within the plot?</li>
+                        <li>Where does 'story' come up within The Book of Phoenix?</li>
+                        <li>Narrative framing (a story within a story); Cultural stories/mythology.</li>
+                    </ul>
+                </div>
+                <div class="pixel-box" style="flex: 1; border-color: var(--accent-green);">
+                    <h3 style="color: var(--accent-green); margin-top: 0;">They Say/I Say <a href="https://drive.google.com/file/d/1oLPH4m46fVp8Ti-4bP5zUgaMfhqlaIy3/view?usp=drive_link" target="_blank">Chapter 8</a> & <a href="https://drive.google.com/file/d/1CfQOm6x8iitmraJOdjBd7g_V4bSa7RSL/view?usp=drive_link" target="_blank">Chapter 9</a>:</h3>
+                    <ul style="font-size: 1.2rem;">
+                        <li>What is the significance of using transitions within writing?</li>
+                        <li>How does the 'so what' concept work when studying literature?</li>
+                        <li>Who might find literary analysis important?</li>
+                        <li>Does the 'so what' concept apply at all? Why or why not?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Essay 2 (原12) -->
+        <div class="slide" id="slide-8" style="overflow: hidden;">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.3rem;">Essay 2</h1>
+            
+            <p style="font-size: 1.15rem; margin: 0 0 0.3rem 0; color: var(--accent-yellow);">*Designed to take 1 to 1.5 hours.* You have unlimited time to complete this assignment. <strong>A and B contracts only.</strong></p>
+            <p style="font-size: 1.05rem; margin: 0 0 0.5rem 0;">Ensure you complete all identifying information at the top of the exam booklet.</p>
+            
+            <div class="pixel-box" style="margin: 0.3rem 0; padding: 0.7rem;">
+                <h3 style="margin: 0 0 0.3rem 0; font-size: 1.15rem; color: var(--accent-yellow);">Permitted resources:</h3>
+                <ul style="font-size: 1.1rem; margin: 0;">
+                    <li>Up to <strong>2</strong> print dictionaries, including translation, phonetic, and other dictionaries.</li>
+                    <li><strong>1</strong> <span style="color: var(--accent-pink);">single sided, hand written Evidence Chart</span> with summary sentences.</li>
+                    <li>Computer with a Respondus lockdown browser.</li>
+                    <li>Print resources provided by the professor, including proof reading checklists and printed out primary texts (where appropriate).</li>
+                </ul>
+            </div>
+            
+            <div class="pixel-box" style="border-color: var(--accent-green); margin: 0.3rem 0; padding: 0.7rem;">
+                <p style="font-size: 1.1rem; margin: 0 0 0.3rem 0;"><strong>Choose 1 of the texts listed to analyze in response to the below prompt.</strong></p>
+                <p style="font-size: 1.15rem; margin: 0 0 0.2rem 0;"><strong style="color: var(--accent-yellow);">Prompt:</strong> What is the relationship of speculation to technology in literary texts?</p>
+                <p style="font-size: 1.1rem; margin: 0;"><strong>Options:</strong></p>
+                <ul style="font-size: 1.1rem; margin: 0.2rem 0 0 0;">
+                    <li>"<a href="https://canvas.ubc.ca/courses/179607/files/43797021?wrap=1" target="_blank">The Library of Babel</a>" Jorge Luis Borges</li>
+                    <li><em>The Book of Phoenix</em>, Nnedi Okorafor</li>
+                </ul>
+            </div>
+            
+            <div class="pixel-box" style="border-color: var(--accent-blue); margin: 0.3rem 0; padding: 0.7rem;">
+                <h3 style="margin: 0 0 0.3rem 0; font-size: 1.15rem; color: var(--accent-blue);">Write an essay that consists of:</h3>
+                <ul style="font-size: 1.1rem; margin: 0;">
+                    <li>An introduction with a strong, argumentative thesis, clear roadmap, and "so what" statement.</li>
+                    <li>~3 critical paragraphs with claims/sub-topic sentences that undertake your analysis.
+                        <ul style="margin: 0.2rem 0 0 0; font-size: 1.05rem;">
+                            <li style="margin-bottom: 0.1rem;">The structure of the paragraph should use a topic sentence, evidence-analysis pairs, and statement of significance as we learned in class.</li>
+                            <li style="margin-bottom: 0.1rem;">Statements of significance in the essay should say why the paragraph is important for your argument.</li>
+                            <li>Well framed use of primary evidence and analysis.</li>
+                        </ul>
+                    </li>
+                    <li>A 4-5 sentence conclusion that expands from your essay's argument to broader significance within the themes of the course.</li>
+                </ul>
+            </div>
+            
+            <p style="font-size: 1.2rem; margin: 0.3rem 0 0 0; text-align: center; color: var(--accent-yellow);"><strong>Essays should be no more than 1000 words.</strong></p>
+        </div>
+
+        <!-- SLIDE 9: Introductions Templates (原13) -->
+        <div class="slide" id="slide-9">
+            <h1 style="font-size: 1.5rem;">Introductions – What's the Deal?</h1>
+            <div class="pixel-box" style="border-color: var(--accent-green); margin: 0.5rem 0; padding: 1rem;">
+                <h3 style="color: var(--accent-green); margin-top: 0; font-size: 1.1rem;">Thesis Template:</h3>
+                <p style="font-size: 1.4rem; margin: 0.5rem 0 0 0;">"In this essay, I will argue that [BLANK]"</p>
+            </div>
+            <div class="pixel-box" style="border-color: var(--accent-blue); margin: 0.5rem 0; padding: 1rem;">
+                <h3 style="color: var(--accent-blue); margin-top: 0; font-size: 1.1rem;">Roadmap Template:</h3>
+                <p style="font-size: 1.3rem; margin: 0.5rem 0 0 0;">"To demonstrate this, first I will [paragraph 1]. Then I will [paragraph 2], followed by [paragraph 3]."</p>
+            </div>
+            <div class="pixel-box" style="border-color: var(--accent-pink); margin: 0.5rem 0; padding: 1rem;">
+                <h3 style="color: var(--accent-pink); margin-top: 0; font-size: 1.1rem;">So What Template:</h3>
+                <p style="font-size: 1.3rem; margin: 0.5rem 0 0 0;">"This argument is significant because [So What Statement]."</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: Three Argumentative Body Paragraphs (原14) -->
+        <div class="slide" id="slide-10" style="overflow: hidden;">
+            <h1 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Three Argumentative Body Paragraphs</h1>
+            <p class="warning" style="font-size: 1.2rem; margin: 0.3rem 0;">These are NOT 'They Say' / 'I Say' / 'Expansion' paragraphs</p>
+            <div class="pixel-box" style="border-color: var(--accent-yellow); margin: 0.5rem 0; padding: 0.8rem;">
+                <p style="font-size: 1.4rem; margin: 0 0 0.5rem 0;">Remember – each paragraph should contain <strong>one clear argument</strong>, relating to <strong>one theme (row)</strong> in your evidence chart.</p>
+                <ul style="font-size: 1.35rem; margin: 0;">
+                    <li style="margin-bottom: 0.3rem;"><strong style="color: var(--accent-yellow);">1</strong> strong and accurate topic sentence/claim for your paragraph.</li>
+                    <li style="margin-bottom: 0.3rem;"><strong style="color: var(--accent-yellow);">4-5</strong> well-written, observant sentences.
+                        <ul style="margin-top: 0.3rem;">
+                            <li style="margin-left: 1rem; margin-bottom: 0.2rem; list-style: circle;">At least <strong style="color: var(--accent-yellow);">1</strong> well-chosen, framed, and grammatically integrated quotation.</li>
+                            <li style="margin-left: 1rem; margin-bottom: 0.2rem; list-style: circle;">Discussion or explanation at least as long as the quotation.</li>
+                        </ul>
+                    </li>
+                    <li><strong style="color: var(--accent-yellow);">1</strong> final sentence that expands on the summary.</li>
+                </ul>
+            </div>
+            <div class="pixel-box" style="border-color: var(--accent-pink); margin: 0.5rem 0; padding: 0.8rem;">
+                <p style="font-size: 1.3rem; margin: 0;">*This is not the same thing as a "connector" sentence. Each paragraph should represent a single theme or row in your evidence chart.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: Writing Activity (原8) -->
+        <div class="slide" id="slide-11" style="justify-content: center;">
+            <h1 style="font-size: 1.6rem; margin-bottom: 1rem;">Writing Activity</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 1.5rem;">Using your evidence chart from last week, write a <strong>thesis</strong> and <strong>so what</strong> statements using the following templates:</p>
+            
+            <div class="pixel-box" style="border-color: var(--accent-green); margin: 0.8rem 0; padding: 1.2rem;">
+                <h3 style="color: var(--accent-green); margin-top: 0; font-size: 1.2rem;">Thesis Template:</h3>
+                <p style="font-size: 1.6rem; margin: 0.5rem 0 0 0;">"In this essay, I will argue that [BLANK]"</p>
+            </div>
+            
+            <div class="pixel-box" style="border-color: var(--accent-pink); margin: 0.8rem 0; padding: 1.2rem;">
+                <h3 style="color: var(--accent-pink); margin-top: 0; font-size: 1.2rem;">So What Template:</h3>
+                <p style="font-size: 1.6rem; margin: 0.5rem 0 0 0;">"This argument is significant because [So What Statement]."</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: The Book of Phoenix Passage + QR (原9) -->
+        <div class="slide" id="slide-12" style="overflow: hidden;">
+            <h1 style="font-size: 1.4rem; margin-bottom: 0.5rem;">The Book of Phoenix - Passage</h1>
+            <div style="display: flex; gap: 1rem; height: calc(100% - 2.5rem);">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="pixel-box" style="border-color: var(--accent-yellow); font-size: 1.25rem; flex: 1; display: flex; align-items: center;">
+                        <blockquote style="border-left-color: var(--accent-green); margin: 0;">
+                            <p style="margin: 0 0 0.5rem 0;">"One must stop time to listen to a story. The storyteller starts it again. She starts it in her own place, in her own moment, in her own point of view. As long as you listen, she is in charge of your destiny. You and the storyteller share everything, even your existence.</p>
+                            <p style="margin: 0 0 0.5rem 0;">Listen…</p>
+                            <p style="margin: 0 0 0.5rem 0;">I started picking up the local accent. I could never fit in, so that wasn't the reason. I just liked the sound of it. I missed my love Saeed, my friend Mmuo, the other Tower 7 prisoners who weren't so nice to me. Speaking like the Ghanaians reminded me of them all. Plus, after all that had happened, it felt good to be different from what I had been, yet the same. That which was me would never change. That which was me could survive death. Over and over.</p>
+                            <p style="margin: 0;"><strong style="color: var(--accent-yellow);">I was Phoenix.</strong>"</p>
+                        </blockquote>
+                    </div>
+                </div>
+                <div style="width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="class-toggle" style="margin-bottom: 1rem;">
+                        <button class="btn active" onclick="switchClass('T2D')" style="padding: 8px 25px;">T2D</button>
+                        <button class="btn" onclick="switchClass('T2B')" style="padding: 8px 25px;">T2B</button>
+                    </div>
+                    <div id="class-T2D" class="class-content" style="flex-direction: column; align-items: center;">
+                        <div style="background: #fff; padding: 0.8rem; border: 4px solid var(--accent-green);">
+                            <img src="QRcode_T2D.png" alt="QR Code T2D" style="width: 220px; height: 220px; display: block;">
+                        </div>
+                        <p style="font-family: 'Press Start 2P', cursive; font-size: 0.8rem; color: var(--accent-green); margin: 0.5rem 0 0.3rem 0;">Google Doc</p>
+                        <a href="https://docs.google.com/document/d/1P7T7T23pmsF9HF-dBlrP3kzlQgwcYEXEqwRsjFsg72k/edit?usp=sharing" target="_blank" style="font-size: 1.1rem;">[T2D]</a>
+                    </div>
+                    <div id="class-T2B" class="class-content hidden" style="flex-direction: column; align-items: center;">
+                        <div style="background: #fff; padding: 0.8rem; border: 4px solid var(--accent-green);">
+                            <img src="QRcode_T2B.png" alt="QR Code T2B" style="width: 220px; height: 220px; display: block;">
+                        </div>
+                        <p style="font-family: 'Press Start 2P', cursive; font-size: 0.8rem; color: var(--accent-green); margin: 0.5rem 0 0.3rem 0;">Google Doc</p>
+                        <a href="https://docs.google.com/document/d/1sDihI5ay6khz7U8bx29Y8SqHmpKZtNREnr7a4yoyQEk/edit?usp=sharing" target="_blank" style="font-size: 1.1rem;">[T2B]</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 13: Evidence Chart Example (原10) -->
+        <div class="slide" id="slide-13" style="overflow: hidden;">
+            <h1 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Evidence Chart Example</h1>
+            <table style="width: 100%; border-collapse: collapse; font-size: 1rem; margin-top: 0.3rem; flex: 1;">
+                <thead>
+                    <tr>
+                        <th style="border: 2px solid var(--text-main); padding: 10px; background: var(--accent-pink); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.7rem; width: 12%;">Themes</th>
+                        <th style="border: 2px solid var(--text-main); padding: 10px; background: var(--accent-yellow); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.7rem;">Otherness</th>
+                        <th style="border: 2px solid var(--text-main); padding: 10px; background: var(--accent-green); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.7rem;">Storytelling</th>
+                        <th style="border: 2px solid var(--text-main); padding: 10px; background: var(--accent-blue); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.7rem;">Death/Rebirth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 2px solid var(--text-main); padding: 10px; font-weight: bold; color: var(--accent-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.65rem; vertical-align: top;">Quotes</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">"I could never fit in, so that wasn't the reason."<br><br>"It felt good to be different from what I had been, yet the same. That which was me would never change."</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">"You and the storyteller share everything, even your existence"<br><br>"One must stop time to listen to a story."</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">"That which was me could survive death. Over and over"<br><br>"The storyteller starts it again."</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 2px solid var(--text-main); padding: 10px; font-weight: bold; color: var(--accent-green); font-family: 'Press Start 2P', cursive; font-size: 0.6rem; vertical-align: top;">Context</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">That one will struggle to change to be included, and will feel excluded.<br><br>Racism in the real world and the struggle for those who are different</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">Storytelling has always been a major important aspect to humanity guiding people, the transference of knowledge and culture. This could be seen especially in indigenous cultures with oral traditions where story is converted to a deeper lesson.</td>
+                        <td style="border: 2px solid var(--text-main); padding: 8px; vertical-align: top;">Phoenix died and was reborn.<br><br>Phoenix's name is a symbol of rebirth and renewal.<br><br>Symbolizes transformation, the destruction of the old world was needed in order for a new and more futuristic world.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SLIDE 14: Evidence Chart from Acheson's Examples (原11) -->
+        <div class="slide" id="slide-14" style="overflow: hidden;">
+            <h1 style="font-size: 1.3rem; margin-bottom: 0.3rem;">Evidence Chart from Acheson's Examples</h1>
+            <h2 style="color: #fff; font-size: 0.9rem; margin-bottom: 0.3rem;">Third Version: Adding Evidence About Social Context</h2>
+            <div style="flex: 1; width: 100%; display: flex; flex-direction: column;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 1rem; flex: 1;">
+                    <thead>
+                        <tr>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: transparent; width: 12%;"></th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-pink); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">MATERIAL REALITY</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-yellow); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">MARRIAGE</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-green); color: #000; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">SENSUOUSNESS</th>
+                            <th style="border: 2px solid var(--text-main); padding: 8px; background: var(--accent-blue); color: #fff; font-family: 'Press Start 2P', cursive; font-size: 0.6rem;">EMOTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; font-weight: bold; color: var(--accent-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.7rem; vertical-align: top;">Poem</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">"the plums" 2<br>"the icebox" 4<br>"breakfast" 8</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Title<br>"I/me," "you"<br>"icebox" 4, "breakfast" 8</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">"I have eaten" 1<br>"delicious" 10<br>"sweet" 11<br>"cold" 12</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Title<br>"I/me," "you"<br>"Forgive me" 9</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; font-weight: bold; color: var(--accent-green); font-family: 'Press Start 2P', cursive; font-size: 0.65rem; vertical-align: top;">Reference</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Dictionary: Anglo-Saxon words</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Biography: Williams's marriage</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Dictionary: plum</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Edition: "Reply"</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 2px solid var(--text-main); padding: 8px; font-weight: bold; color: var(--accent-pink); font-family: 'Press Start 2P', cursive; font-size: 0.6rem; vertical-align: top;">Social</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Women's work labour intensive<br>Food important part of women's lives</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Nuclear family</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Intimacy in marriage</td>
+                            <td style="border: 2px solid var(--text-main); padding: 6px; vertical-align: top;">Wife isolated</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pixel-box" style="margin-top: 0.5rem; padding: 0.6rem; flex-shrink: 0;">
+                <p style="margin: 0 0 0.3rem 0; font-size: 1.1rem;"><strong>First Impressions, Reviewed:</strong></p>
+                <ol style="font-size: 1rem; margin: 0;">
+                    <li>"This Is Just To Say" is about sensual, moral, and interpersonal experience in the material, everyday world.</li>
+                    <li>"This Is Just To Say" is about relationships between people and about how these relationships are shaped by use of language.</li>
+                    <li>"This Is Just To Say" is about poetry and how it is different or the same as everyday acts of communication.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- SLIDE 15: Important Notes -->
+        <div class="slide" id="slide-15" style="overflow: hidden;">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Important Notes</h1>
+            <div class="pixel-box" style="border-color: var(--accent-yellow); padding: 1rem;">
+                <ul style="font-size: 1.45rem;">
+                    <li style="margin-bottom: 0.8rem;">Next week is <strong style="color: var(--accent-yellow);">reading week</strong>! No readings, but please do prepare for the in-class essay if you are writing it.</li>
+                    <li style="margin-bottom: 0.8rem;">Grade contract Renegotiation due on <strong style="color: var(--accent-yellow);">February 23rd</strong></li>
+                    <li style="margin-bottom: 0.8rem;"><strong>In-Class Essay on the 23rd</strong> (If you are with C contract, skip this class)</li>
+                    <li>No tutorial on Week 8. I will still be posting questions for the readings that week.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 16: Purdue OWL -->
+        <div class="slide" id="slide-16" style="overflow: hidden;">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.3rem;">Purdue OWL</h1>
+            <h2 style="color: #fff; font-size: 1.2rem; margin-bottom: 1rem;">Citation Guide Resource</h2>
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <div style="flex-shrink: 0;">
+                    <img src="owl.png" alt="Purdue OWL" style="max-width: 350px; border: 2px solid var(--text-main);">
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.3rem;"><a href="https://owl.purdue.edu/" target="_blank">Purdue OWL</a></h2>
+                    <p style="font-size: 1.5rem; margin: 0.5rem 0;">Purdue Online Writing Lab</p>
+                    <p style="font-size: 1.35rem; margin: 0;">The online writing lab offers global support through online reference materials and services for creating citations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 17: End -->
+        <div class="slide" id="slide-17" style="justify-content: center; align-items: center;">
+            <div style="text-align: center; width: 100%;">
+                <h1 style="font-size: 3.5rem; color: var(--accent-green); text-shadow: 4px 4px 0 #000;">THANK YOU!</h1>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn" onclick="prevSlide()" id="btn-prev"><i class="fas fa-caret-left"></i> PREV</button>
+            <div class="progress" id="slide-counter">1 / 17</div>
+            <button class="btn" onclick="nextSlide()" id="btn-next">NEXT <i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const counter = document.getElementById('slide-counter');
+
+        function switchClass(className) {
+            document.querySelectorAll('.class-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('class-' + className).classList.remove('hidden');
+            document.querySelectorAll('.class-toggle .btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === className) btn.classList.add('active');
+            });
+        }
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) slide.classList.add('active');
+            });
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+            document.getElementById('btn-prev').style.opacity = currentSlide === 0 ? '0.5' : '1';
+            document.getElementById('btn-next').style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlide(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            else if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        document.getElementById('game-boy-container').addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const width = window.innerWidth;
+            if (window.getSelection().toString().length === 0) {
+                if (e.clientX > width * 0.7) nextSlide();
+                else if (e.clientX < width * 0.3) prevSlide();
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+</html>
